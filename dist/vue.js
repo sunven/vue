@@ -5084,18 +5084,24 @@
     return modified
   }
 
-  function Vue (options) {
-    if (!(this instanceof Vue)
-    ) {
-      warn('Vue is a constructor and should be called with the `new` keyword');
+  //Vue构造函数
+  function Vue(options) {
+    if (!(this instanceof Vue)) {
+      warn("Vue is a constructor and should be called with the `new` keyword");
     }
+    //初始化
     this._init(options);
   }
 
+  //1.初始化混入
   initMixin(Vue);
+  //2.状态混入
   stateMixin(Vue);
+  //3.事件混入
   eventsMixin(Vue);
+  //4.生命周期混入
   lifecycleMixin(Vue);
+  //5.渲染函数混入
   renderMixin(Vue);
 
   /*  */
@@ -11920,9 +11926,10 @@
 
   var idToTemplate = cached(function (id) {
     var el = query(id);
-    return el && el.innerHTML
+    return el && el.innerHTML;
   });
 
+  //扩展$mount
   var mount = Vue.prototype.$mount;
   Vue.prototype.$mount = function (
     el,
@@ -11933,18 +11940,18 @@
     /* istanbul ignore if */
     if (el === document.body || el === document.documentElement) {
       warn(
-        "Do not mount Vue to <html> or <body> - mount to normal elements instead."
-      );
-      return this
+          "Do not mount Vue to <html> or <body> - mount to normal elements instead."
+        );
+      return this;
     }
 
     var options = this.$options;
-    // resolve template/el and convert to render function
+    // 解析模板/el并转换为渲染函数
     if (!options.render) {
       var template = options.template;
       if (template) {
-        if (typeof template === 'string') {
-          if (template.charAt(0) === '#') {
+        if (typeof template === "string") {
+          if (template.charAt(0) === "#") {
             template = idToTemplate(template);
             /* istanbul ignore if */
             if (!template) {
@@ -11958,9 +11965,9 @@
           template = template.innerHTML;
         } else {
           {
-            warn('invalid template option:' + template, this);
+            warn("invalid template option:" + template, this);
           }
-          return this
+          return this;
         }
       } else if (el) {
         template = getOuterHTML(el);
@@ -11968,16 +11975,20 @@
       if (template) {
         /* istanbul ignore if */
         if (config.performance && mark) {
-          mark('compile');
+          mark("compile");
         }
 
-        var ref = compileToFunctions(template, {
-          outputSourceRange: "development" !== 'production',
-          shouldDecodeNewlines: shouldDecodeNewlines,
-          shouldDecodeNewlinesForHref: shouldDecodeNewlinesForHref,
-          delimiters: options.delimiters,
-          comments: options.comments
-        }, this);
+        var ref = compileToFunctions(
+          template,
+          {
+            outputSourceRange: "development" !== "production",
+            shouldDecodeNewlines: shouldDecodeNewlines,
+            shouldDecodeNewlinesForHref: shouldDecodeNewlinesForHref,
+            delimiters: options.delimiters,
+            comments: options.comments,
+          },
+          this
+        );
         var render = ref.render;
         var staticRenderFns = ref.staticRenderFns;
         options.render = render;
@@ -11985,25 +11996,25 @@
 
         /* istanbul ignore if */
         if (config.performance && mark) {
-          mark('compile end');
-          measure(("vue " + (this._name) + " compile"), 'compile', 'compile end');
+          mark("compile end");
+          measure(("vue " + (this._name) + " compile"), "compile", "compile end");
         }
       }
     }
-    return mount.call(this, el, hydrating)
+    return mount.call(this, el, hydrating);
   };
 
   /**
    * Get outerHTML of elements, taking care
    * of SVG elements in IE as well.
    */
-  function getOuterHTML (el) {
+  function getOuterHTML(el) {
     if (el.outerHTML) {
-      return el.outerHTML
+      return el.outerHTML;
     } else {
-      var container = document.createElement('div');
+      var container = document.createElement("div");
       container.appendChild(el.cloneNode(true));
-      return container.innerHTML
+      return container.innerHTML;
     }
   }
 
@@ -12012,3 +12023,4 @@
   return Vue;
 
 }));
+//# sourceMappingURL=vue.js.map

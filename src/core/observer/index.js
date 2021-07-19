@@ -1,8 +1,8 @@
 /* @flow */
 
-import Dep from './dep'
-import VNode from '../vdom/vnode'
-import { arrayMethods } from './array'
+import Dep from "./dep";
+import VNode from "../vdom/vnode";
+import { arrayMethods } from "./array";
 import {
   def,
   warn,
@@ -13,19 +13,19 @@ import {
   isPrimitive,
   isUndef,
   isValidArrayIndex,
-  isServerRendering
-} from '../util/index'
+  isServerRendering,
+} from "../util/index";
 
-const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
+const arrayKeys = Object.getOwnPropertyNames(arrayMethods);
 
 /**
  * In some cases we may want to disable observation inside a component's
  * update computation.
  */
-export let shouldObserve: boolean = true
+export let shouldObserve: boolean = true;
 
-export function toggleObserving (value: boolean) {
-  shouldObserve = value
+export function toggleObserving(value: boolean) {
+  shouldObserve = value;
 }
 
 /**
@@ -39,20 +39,28 @@ export class Observer {
   dep: Dep;
   vmCount: number; // number of vms that have this object as root $data
 
-  constructor (value: any) {
-    this.value = value
-    this.dep = new Dep()
-    this.vmCount = 0
-    def(value, '__ob__', this)
+  constructor(value: any) {
+    this.value = value;
+    //Observer实例有一个依赖项
+    //this.$set(obj,foo,'bar','bar'),新增属性或数组元素变化，需要这个dep通知更新
+    this.dep = new Dep();
+    this.vmCount = 0;
+    //为当前对象定义__ob__属性，便于判断这个对象是否做过响应式
+    def(value, "__ob__", this);
     if (Array.isArray(value)) {
+      //数组
       if (hasProto) {
-        protoAugment(value, arrayMethods)
+        //有原型，覆盖
+        protoAugment(value, arrayMethods);
       } else {
-        copyAugment(value, arrayMethods, arrayKeys)
+        //没有原型，直接加属性方法
+        copyAugment(value, arrayMethods, arrayKeys);
       }
-      this.observeArray(value)
+      //观察数组
+      this.observeArray(value);
     } else {
-      this.walk(value)
+      //观察对象
+      this.walk(value);
     }
   }
 
@@ -61,19 +69,20 @@ export class Observer {
    * getter/setters. This method should only be called when
    * value type is Object.
    */
-  walk (obj: Object) {
-    const keys = Object.keys(obj)
+  walk(obj: Object) {
+    const keys = Object.keys(obj);
     for (let i = 0; i < keys.length; i++) {
-      defineReactive(obj, keys[i])
+      //对每个属性做响应式
+      defineReactive(obj, keys[i]);
     }
   }
 
   /**
    * Observe a list of Array items.
    */
-  observeArray (items: Array<any>) {
+  observeArray(items: Array<any>) {
     for (let i = 0, l = items.length; i < l; i++) {
-      observe(items[i])
+      observe(items[i]);
     }
   }
 }
@@ -84,9 +93,9 @@ export class Observer {
  * Augment a target Object or Array by intercepting
  * the prototype chain using __proto__
  */
-function protoAugment (target, src: Object) {
+function protoAugment(target, src: Object) {
   /* eslint-disable no-proto */
-  target.__proto__ = src
+  target.__proto__ = src;
   /* eslint-enable no-proto */
 }
 
@@ -95,10 +104,10 @@ function protoAugment (target, src: Object) {
  * hidden properties.
  */
 /* istanbul ignore next */
-function copyAugment (target: Object, src: Object, keys: Array<string>) {
+function copyAugment(target: Object, src: Object, keys: Array<string>) {
   for (let i = 0, l = keys.length; i < l; i++) {
-    const key = keys[i]
-    def(target, key, src[key])
+    const key = keys[i];
+    def(target, key, src[key]);
   }
 }
 
@@ -107,13 +116,15 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
  */
-export function observe (value: any, asRootData: ?boolean): Observer | void {
+export function observe(value: any, asRootData: ?boolean): Observer | void {
   if (!isObject(value) || value instanceof VNode) {
-    return
+    return;
   }
-  let ob: Observer | void
-  if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
-    ob = value.__ob__
+  // 一个对象（data）对应一个Observer
+  let ob: Observer | void;
+  //做过响应式，则存在__ob__，直接返回
+  if (hasOwn(value, "__ob__") && value.__ob__ instanceof Observer) {
+    ob = value.__ob__;
   } else if (
     shouldObserve &&
     !isServerRendering() &&
@@ -121,76 +132,83 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
     Object.isExtensible(value) &&
     !value._isVue
   ) {
-    ob = new Observer(value)
+    ob = new Observer(value);
   }
   if (asRootData && ob) {
-    ob.vmCount++
+    ob.vmCount++;
   }
-  return ob
+  return ob;
 }
 
 /**
  * Define a reactive property on an Object.
  */
-export function defineReactive (
+export function defineReactive(
   obj: Object,
   key: string,
   val: any,
   customSetter?: ?Function,
   shallow?: boolean
 ) {
-  const dep = new Dep()
+  //Dep与属性一一对应
+  const dep = new Dep();
 
-  const property = Object.getOwnPropertyDescriptor(obj, key)
+  const property = Object.getOwnPropertyDescriptor(obj, key);
   if (property && property.configurable === false) {
-    return
+    return;
   }
 
   // cater for pre-defined getter/setters
-  const getter = property && property.get
-  const setter = property && property.set
+  const getter = property && property.get;
+  const setter = property && property.set;
   if ((!getter || setter) && arguments.length === 2) {
-    val = obj[key]
+    val = obj[key];
   }
 
-  let childOb = !shallow && observe(val)
+  //递归处理，如果是对象，则获得子Observer实例
+  let childOb = !shallow && observe(val);
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
-    get: function reactiveGetter () {
-      const value = getter ? getter.call(obj) : val
+    get: function reactiveGetter() {
+      const value = getter ? getter.call(obj) : val;
+      //Dep.target为当前Watcher实例
       if (Dep.target) {
-        dep.depend()
+        //Dep和Watcher为n:n(computed,watch)
+        //双向添加Watcher和Dep的关系
+        dep.depend();
         if (childOb) {
-          childOb.dep.depend()
+          //把当前Watcher和子Observer建立关系
+          //对象新增属性，数组元素变化需要对象上的dep通知更新
+          childOb.dep.depend();
           if (Array.isArray(value)) {
-            dependArray(value)
+            dependArray(value);
           }
         }
       }
-      return value
+      return value;
     },
-    set: function reactiveSetter (newVal) {
-      const value = getter ? getter.call(obj) : val
+    set: function reactiveSetter(newVal) {
+      const value = getter ? getter.call(obj) : val;
       /* eslint-disable no-self-compare */
       if (newVal === value || (newVal !== newVal && value !== value)) {
-        return
+        return;
       }
       /* eslint-enable no-self-compare */
-      if (process.env.NODE_ENV !== 'production' && customSetter) {
-        customSetter()
+      if (process.env.NODE_ENV !== "production" && customSetter) {
+        customSetter();
       }
       // #7981: for accessor properties without setter
-      if (getter && !setter) return
+      if (getter && !setter) return;
       if (setter) {
-        setter.call(obj, newVal)
+        setter.call(obj, newVal);
       } else {
-        val = newVal
+        val = newVal;
       }
-      childOb = !shallow && observe(newVal)
-      dep.notify()
-    }
-  })
+      childOb = !shallow && observe(newVal);
+      dep.notify();
+    },
+  });
 }
 
 /**
@@ -198,79 +216,94 @@ export function defineReactive (
  * triggers change notification if the property doesn't
  * already exist.
  */
-export function set (target: Array<any> | Object, key: any, val: any): any {
-  if (process.env.NODE_ENV !== 'production' &&
+export function set(target: Array<any> | Object, key: any, val: any): any {
+  if (
+    process.env.NODE_ENV !== "production" &&
     (isUndef(target) || isPrimitive(target))
   ) {
-    warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
+    warn(
+      `Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`
+    );
   }
   if (Array.isArray(target) && isValidArrayIndex(key)) {
-    target.length = Math.max(target.length, key)
-    target.splice(key, 1, val)
-    return val
+    //是数组且key合理
+    //比如数组长5，但调用set对索引为10的位置该值，需要改一下数组length为10
+    target.length = Math.max(target.length, key);
+    //删除key这个位置，替换为val
+    target.splice(key, 1, val);
+    return val;
   }
   if (key in target && !(key in Object.prototype)) {
-    target[key] = val
-    return val
+    //key已经存在，直接修改，target已经是响应式数据
+    target[key] = val;
+    return val;
   }
-  const ob = (target: any).__ob__
+  const ob = (target: any).__ob__;
   if (target._isVue || (ob && ob.vmCount)) {
-    process.env.NODE_ENV !== 'production' && warn(
-      'Avoid adding reactive properties to a Vue instance or its root $data ' +
-      'at runtime - declare it upfront in the data option.'
-    )
-    return val
+    process.env.NODE_ENV !== "production" &&
+      warn(
+        "Avoid adding reactive properties to a Vue instance or its root $data " +
+          "at runtime - declare it upfront in the data option."
+      );
+    return val;
   }
   if (!ob) {
-    target[key] = val
-    return val
+    //target上的ob不存在,赋值返回
+    target[key] = val;
+    return val;
   }
-  defineReactive(ob.value, key, val)
-  ob.dep.notify()
-  return val
+  //对新赋的值做响应式
+  defineReactive(ob.value, key, val);
+  //通知更新
+  ob.dep.notify();
+  return val;
 }
 
 /**
  * Delete a property and trigger change if necessary.
  */
-export function del (target: Array<any> | Object, key: any) {
-  if (process.env.NODE_ENV !== 'production' &&
+export function del(target: Array<any> | Object, key: any) {
+  if (
+    process.env.NODE_ENV !== "production" &&
     (isUndef(target) || isPrimitive(target))
   ) {
-    warn(`Cannot delete reactive property on undefined, null, or primitive value: ${(target: any)}`)
+    warn(
+      `Cannot delete reactive property on undefined, null, or primitive value: ${(target: any)}`
+    );
   }
   if (Array.isArray(target) && isValidArrayIndex(key)) {
-    target.splice(key, 1)
-    return
+    target.splice(key, 1);
+    return;
   }
-  const ob = (target: any).__ob__
+  const ob = (target: any).__ob__;
   if (target._isVue || (ob && ob.vmCount)) {
-    process.env.NODE_ENV !== 'production' && warn(
-      'Avoid deleting properties on a Vue instance or its root $data ' +
-      '- just set it to null.'
-    )
-    return
+    process.env.NODE_ENV !== "production" &&
+      warn(
+        "Avoid deleting properties on a Vue instance or its root $data " +
+          "- just set it to null."
+      );
+    return;
   }
   if (!hasOwn(target, key)) {
-    return
+    return;
   }
-  delete target[key]
+  delete target[key];
   if (!ob) {
-    return
+    return;
   }
-  ob.dep.notify()
+  ob.dep.notify();
 }
 
 /**
  * Collect dependencies on array elements when the array is touched, since
  * we cannot intercept array element access like property getters.
  */
-function dependArray (value: Array<any>) {
+function dependArray(value: Array<any>) {
   for (let e, i = 0, l = value.length; i < l; i++) {
-    e = value[i]
-    e && e.__ob__ && e.__ob__.dep.depend()
+    e = value[i];
+    e && e.__ob__ && e.__ob__.dep.depend();
     if (Array.isArray(e)) {
-      dependArray(e)
+      dependArray(e);
     }
   }
 }
