@@ -77,6 +77,7 @@ export default class Watcher {
       process.env.NODE_ENV !== "production" ? expOrFn.toString() : "";
     // parse expression for getter
     if (typeof expOrFn === "function") {
+      // 这里的expOrFn就是updateComponent
       this.getter = expOrFn;
     } else {
       this.getter = parsePath(expOrFn);
@@ -95,13 +96,14 @@ export default class Watcher {
   }
 
   /**
-   * Evaluate the getter, and re-collect dependencies.
+   * 评估getter，并重新收集依赖项。
    */
   get() {
     pushTarget(this);
     let value;
     const vm = this.vm;
     try {
+      // 相当于调用vm._update(vm._render(), hydrating);
       value = this.getter.call(vm, vm);
     } catch (e) {
       if (this.user) {
@@ -165,6 +167,7 @@ export default class Watcher {
   update() {
     /* istanbul ignore else */
     if (this.lazy) {
+      // 计算属性
       this.dirty = true;
     } else if (this.sync) {
       this.run();
@@ -174,11 +177,12 @@ export default class Watcher {
   }
 
   /**
-   * Scheduler job interface.
-   * Will be called by the scheduler.
+   * 调度程序作业界面。
+   * 将由调度程序调用。
    */
   run() {
     if (this.active) {
+      // 如果是render Watcher，get就是updateComponent方法
       const value = this.get();
       if (
         value !== this.value ||

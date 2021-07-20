@@ -169,6 +169,7 @@ export function mountComponent(
   }
   callHook(vm, "beforeMount");
 
+  //定义updateComponent方法
   let updateComponent;
   /* istanbul ignore if */
   if (process.env.NODE_ENV !== "production" && config.performance && mark) {
@@ -190,13 +191,12 @@ export function mountComponent(
     };
   } else {
     updateComponent = () => {
+      //vm._render()得到新的VNode
       vm._update(vm._render(), hydrating);
     };
   }
 
-  // we set this to vm._watcher inside the watcher's constructor
-  // since the watcher's initial patch may call $forceUpdate (e.g. inside child
-  // component's mounted hook), which relies on vm._watcher being already defined
+  // 我们将其设置为vm._watcher在watcher的构造函数中，因为watcher的初始补丁可能调用$forceUpdate（例如，在子组件的挂载钩子中），它依赖于已经定义的vm._watcher
   new Watcher(
     vm,
     updateComponent,

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      function defineReactive(obj, key, val) {
+        Object.defineProperty(obj, key, {
+          get() {
+            return val;
+          },
+          set(newVal) {
+            val = newVal;
+            update();
+          },
+        });
+      }
+
+      const obj = {};
+      defineReactive(obj, "foo", "");
+
+      import {
+        init,
+        h,
+      } from "https://unpkg.com/snabbdom@3.0.3/build/snabbdom.esm.js";
+      const patch = init([]);
+      let oldVNode = null;
+      function update() {
+        if (!oldVNode) {
+          //init
+          oldVNode = patch(app, render());
+        } else {
+          patch(oldVNode, render());
+        }
+      }
+
+      function render() {
+        return h("div", obj.foo);
+      }
+
+      setInterval(() => {
+        obj.foo = new Date().toTimeString();
+      }, 1000);
+    </script>
+  </body>
+</html>
