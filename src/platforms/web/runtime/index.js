@@ -34,7 +34,8 @@ extend(Vue.options.components, platformComponents);
 // 用于初始化和更新
 Vue.prototype.__patch__ = inBrowser ? patch : noop;
 
-// public mount method
+// mount方法
+// src/platforms/web/entry-runtime-with-compiler.js中，会在此覆盖$mount方法
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean

@@ -13,30 +13,31 @@
     </div>
     <script>
       new Vue({
-        el: "#app",
+        //el: "#app",
         data: {
-          count: 0,
+          count: 1,
         },
+        render(h) {
+          return h("div", this.count);
+        },
+
         mounted() {
-          this.count = Math.random();
-          console.log(this.count);
-          this.count = Math.random();
-          console.log(this.count);
-          console.log("p.innerHTML", this.$refs.refP.innerHTML);
-
-          Promise.resolve().then(() => {
-            console.log("promise:p.innerHTML", this.$refs.refP.innerHTML);
-          });
-
-          this.$nextTick(() => {
-            console.log("tick:p.innerHTML", this.$refs.refP.innerHTML);
-          });
-
-          setInterval(() => {
-            this.count = Math.random();
-          }, 2000);
+          // this.count = Math.random();
+          // console.log(this.count);
+          // this.count = Math.random();
+          // console.log(this.count);
+          // console.log("p.innerHTML", this.$refs.refP.innerHTML);
+          // Promise.resolve().then(() => {
+          //   console.log("promise:p.innerHTML", this.$refs.refP.innerHTML);
+          // });
+          // this.$nextTick(() => {
+          //   console.log("tick:p.innerHTML", this.$refs.refP.innerHTML);
+          // });
+          // setInterval(() => {
+          //   this.count = Math.random();
+          // }, 2000);
         },
-      });
+      }).$mount("#app");
     </script>
   </body>
 </html>
