@@ -882,6 +882,7 @@ export function createPatchFunction(backend) {
     let isInitialPatch = false;
     const insertedVnodeQueue = [];
 
+    // 首次patch oldVnode是$el
     if (isUndef(oldVnode)) {
       // 老的不存在
       // 空装载（可能是组件），创建新的根元素
@@ -895,6 +896,7 @@ export function createPatchFunction(backend) {
         // patch existing root node
         patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly);
       } else {
+        //真实节点（首次）
         if (isRealElement) {
           // mounting to a real element
           // check if this is server-rendered content and if we can perform
@@ -919,6 +921,7 @@ export function createPatchFunction(backend) {
           }
           // either not server-rendered, or hydration failed.
           // create an empty node and replace it
+          // 创建一个空Vnode
           oldVnode = emptyNodeAt(oldVnode);
         }
 

@@ -12,14 +12,14 @@
       <p ref="refP">{{count}}</p>
     </div>
     <script>
-      new Vue({
+      let vm = new Vue({
         //el: "#app",
         data: {
           count: 1,
         },
-        render(h) {
-          return h("div", this.count);
-        },
+        // render(h) {
+        //   return h("div", this.count);
+        // },
 
         mounted() {
           // this.count = Math.random();
