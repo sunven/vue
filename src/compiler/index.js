@@ -16,7 +16,7 @@ export const createCompiler = createCompilerCreator(function baseCompile(
   const ast = parse(template.trim(), options);
   if (options.optimize !== false) {
     // 优化：标记静态节点
-    optmize(ast, options);
+    optimize(ast, options);
   }
   //将ast转为render的字符串形式
   const code = generate(ast, options);
