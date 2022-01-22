@@ -1,13 +1,13 @@
 /*!
  * Vue.js v2.6.14
- * (c) 2014-2021 Evan You
+ * (c) 2014-2022 Evan You
  * Released under the MIT License.
  */
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global = global || self, global.Vue = factory());
-}(this, function () { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('weex/runtime/recycle-list/render-component-template')) :
+  typeof define === 'function' && define.amd ? define(['weex/runtime/recycle-list/render-component-template'], factory) :
+  (global = global || self, global.Vue = factory(global.renderComponentTemplate));
+}(this, function (renderComponentTemplate) { 'use strict';
 
   /*  */
 
@@ -1677,7 +1677,9 @@
       observe(value);
       toggleObserving(prevShouldObserve);
     }
-    {
+    if (
+      !(__WEEX__ && isObject(value) && ('@binding' in value))
+    ) {
       assertProp(prop, key, value, vm, absent);
     }
     return value
@@ -2253,6 +2255,11 @@
       def$$1 = cur = on[name];
       old = oldOn[name];
       event = normalizeEvent(name);
+      /* istanbul ignore if */
+      if (__WEEX__ && isPlainObject(def$$1)) {
+        cur = def$$1.handler;
+        event.params = def$$1.params;
+      }
       if (isUndef(cur)) {
         warn(
           "Invalid handler for event \"" + (event.name) + "\": got " + String(cur),
@@ -3158,12 +3165,6 @@
 
   /*  */
 
-  /*  */
-
-  /*  */
-
-  /*  */
-
   // inline hooks to be invoked on component VNodes during patch
   var componentVNodeHooks = {
     // 实例化和挂在
@@ -3331,6 +3332,14 @@
       asyncFactory
     );
 
+    // Weex specific: invoke recycle-list optimized @render function for
+    // extracting cell-slot template.
+    // https://github.com/Hanks10100/weex-native-directive/tree/master/component
+    /* istanbul ignore if */
+    if (__WEEX__ && renderComponentTemplate.isRecyclableComponent(vnode)) {
+      return renderComponentTemplate.renderRecyclableComponentTemplate(vnode);
+    }
+
     return vnode;
   }
 
@@ -3458,7 +3467,7 @@
       isDef(data.key) &&
       !isPrimitive(data.key)
     ) {
-      {
+      if (!__WEEX__ || !("@binding" in data.key)) {
         warn(
           "Avoid using non-primitive value as key, " +
             "use string/number value instead.",
@@ -4538,7 +4547,7 @@
 
 
 
-  var uid$2 = 0;
+  var uid$1 = 0;
 
   /**
    * A watcher parses an expression, collects dependencies,
@@ -4568,7 +4577,7 @@
       this.deep = this.user = this.lazy = this.sync = false;
     }
     this.cb = cb;
-    this.id = ++uid$2; // uid for batching
+    this.id = ++uid$1; // uid for batching
     this.active = true;
     this.dirty = this.lazy; // for lazy watchers
     this.deps = [];
@@ -5108,14 +5117,14 @@
 
   /*  */
 
-  var uid$3 = 0;
+  var uid$2 = 0;
 
   function initMixin(Vue) {
     // 定义_init方法
     Vue.prototype._init = function (options) {
       var vm = this;
       // a uid
-      vm._uid = uid$3++;
+      vm._uid = uid$2++;
 
       var startTag, endTag;
       /* istanbul ignore if */
@@ -6161,7 +6170,25 @@
         setScope(vnode);
 
         /* istanbul ignore if */
-        {
+        if (__WEEX__) {
+          // in Weex, the default insertion order is parent-first.
+          // List items can be optimized to use children-first insertion
+          // with append="tree".
+          var appendAsTree = isDef(data) && isTrue(data.appendAsTree);
+          if (!appendAsTree) {
+            if (isDef(data)) {
+              invokeCreateHooks(vnode, insertedVnodeQueue);
+            }
+            insert(parentElm, vnode.elm, refElm);
+          }
+          createChildren(vnode, children, insertedVnodeQueue);
+          if (appendAsTree) {
+            if (isDef(data)) {
+              invokeCreateHooks(vnode, insertedVnodeQueue);
+            }
+            insert(parentElm, vnode.elm, refElm);
+          }
+        } else {
           createChildren(vnode, children, insertedVnodeQueue);
           if (isDef(data)) {
             invokeCreateHooks(vnode, insertedVnodeQueue);
@@ -11226,6 +11253,24 @@
     }
   }
 
+  // Generate handler code with binding params on Weex
+  /* istanbul ignore next */
+  function genWeexHandler (params, handlerCode) {
+    var innerHandlerCode = handlerCode;
+    var exps = params.filter(function (exp) { return simplePathRE.test(exp) && exp !== '$event'; });
+    var bindings = exps.map(function (exp) { return ({ '@binding': exp }); });
+    var args = exps.map(function (exp, i) {
+      var key = "$_" + (i + 1);
+      innerHandlerCode = innerHandlerCode.replace(exp, key);
+      return key
+    });
+    args.push('$event');
+    return '{\n' +
+      "handler:function(" + (args.join(',')) + "){" + innerHandlerCode + "},\n" +
+      "params:" + (JSON.stringify(bindings)) + "\n" +
+      '}'
+  }
+
   function genHandler (handler) {
     if (!handler) {
       return 'function(){}'
@@ -11242,6 +11287,10 @@
     if (!handler.modifiers) {
       if (isMethodPath || isFunctionExpression) {
         return handler.value
+      }
+      /* istanbul ignore if */
+      if (__WEEX__ && handler.params) {
+        return genWeexHandler(handler.params, handler.value)
       }
       return ("function($event){" + (isFunctionInvocation ? ("return " + (handler.value)) : handler.value) + "}") // inline statement
     } else {
@@ -11281,6 +11330,10 @@
           : isFunctionInvocation
             ? ("return " + (handler.value))
             : handler.value;
+      /* istanbul ignore if */
+      if (__WEEX__ && handler.params) {
+        return genWeexHandler(handler.params, code + handlerCode)
+      }
       return ("function($event){" + code + handlerCode + "}")
     }
   }
@@ -11891,7 +11944,9 @@
     var dynamicProps = "";
     for (var i = 0; i < props.length; i++) {
       var prop = props[i];
-      var value = transformSpecialNewlines(prop.value);
+      var value = __WEEX__
+        ? generateValue(prop.value)
+        : transformSpecialNewlines(prop.value);
       if (prop.dynamic) {
         dynamicProps += (prop.name) + "," + value + ",";
       } else {
@@ -11904,6 +11959,14 @@
     } else {
       return staticProps;
     }
+  }
+
+  /* istanbul ignore next */
+  function generateValue(value) {
+    if (typeof value === "string") {
+      return transformSpecialNewlines(value);
+    }
+    return JSON.stringify(value);
   }
 
   // #3895, #4268
