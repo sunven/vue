@@ -302,6 +302,7 @@ function initWatch(vm: Component, watch: Object) {
   for (const key in watch) {
     const handler = watch[key];
     if (Array.isArray(handler)) {
+      // 可能为数组
       for (let i = 0; i < handler.length; i++) {
         createWatcher(vm, key, handler[i]);
       }
@@ -366,6 +367,7 @@ export function stateMixin(Vue: Class<Component>) {
     const vm: Component = this;
     if (isPlainObject(cb)) {
       //cb是对象
+      // new Vue options中的watch  带handler的情况
       return createWatcher(vm, expOrFn, cb, options);
     }
     options = options || {};
@@ -377,6 +379,7 @@ export function stateMixin(Vue: Class<Component>) {
       // 立即执行
       const info = `callback for immediate watcher "${watcher.expression}"`;
       pushTarget();
+      // 立即执行时，回调只有一个参数
       invokeWithErrorHandling(cb, vm, [watcher.value], vm, info);
       popTarget();
     }

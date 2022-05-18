@@ -4,10 +4,10 @@
  * Released under the MIT License.
  */
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('weex/runtime/recycle-list/render-component-template')) :
-  typeof define === 'function' && define.amd ? define(['weex/runtime/recycle-list/render-component-template'], factory) :
-  (global = global || self, global.Vue = factory(global.renderComponentTemplate));
-}(this, function (renderComponentTemplate) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  typeof define === 'function' && define.amd ? define(factory) :
+  (global = global || self, global.Vue = factory());
+}(this, function () { 'use strict';
 
   /*  */
 
@@ -45,7 +45,7 @@
 
   /**
    * Quick object check - this is primarily used to tell
-   * Objects from primitive values when we know the value
+   * objects from primitive values when we know the value
    * is a JSON-compliant type.
    */
   function isObject(obj) {
@@ -715,10 +715,12 @@
   /**
    * A dep is an observable that can have multiple
    * directives subscribing to it.
+   * dep 是一个 observable，可以有多个指令订阅它
    */
-  var Dep = function Dep() {
+  var Dep = function Dep(key) {
     this.id = uid++;
     this.subs = [];
+    this._key=key;
   };
 
   Dep.prototype.addSub = function addSub (sub) {
@@ -742,6 +744,7 @@
       // subs aren't sorted in scheduler if not running async
       // we need to sort them now to make sure they fire in correct
       // order
+      // 如果不运行异步，潜艇不会在调度程序中排序，我们现在需要对它们进行排序以确保它们以正确的顺序触发
       subs.sort(function (a, b) { return a.id - b.id; });
     }
     //subs存放Watcher
@@ -753,6 +756,8 @@
   // The current target watcher being evaluated.
   // This is globally unique because only one watcher
   // can be evaluated at a time.
+  // 当前正在评估的目标观察者。 这是全球唯一的，因为一次只能评估一个观察者。
+  // targetStack：父组件中渲染子组件时，
   Dep.target = null;
   var targetStack = [];
 
@@ -1039,7 +1044,7 @@
     shallow
   ) {
     //Dep与属性一一对应
-    var dep = new Dep();
+    var dep = new Dep(key);
 
     var property = Object.getOwnPropertyDescriptor(obj, key);
     if (property && property.configurable === false) {
@@ -1644,25 +1649,25 @@
 
 
 
-  function validateProp (
-    key,
-    propOptions,
-    propsData,
-    vm
-  ) {
+  function validateProp(key, propOptions, propsData, vm) {
     var prop = propOptions[key];
+    // 缺席的
     var absent = !hasOwn(propsData, key);
     var value = propsData[key];
     // boolean casting
     var booleanIndex = getTypeIndex(Boolean, prop.type);
     if (booleanIndex > -1) {
       if (absent && !hasOwn(prop, 'default')) {
+        // 没传，没有default 默认为false
         value = false;
+        // hyphenate: ABC变为A-B-C
       } else if (value === '' || value === hyphenate(key)) {
         // only cast empty string / same name to boolean if
         // boolean has higher priority
+        // 仅将空字符串/同名转换为布尔值 boolean 具有更高的优先级
         var stringIndex = getTypeIndex(String, prop.type);
         if (stringIndex < 0 || booleanIndex < stringIndex) {
+          // [Boolean] || [Boolean, String]
           value = true;
         }
       }
@@ -1677,9 +1682,7 @@
       observe(value);
       toggleObserving(prevShouldObserve);
     }
-    if (
-      !(__WEEX__ && isObject(value) && ('@binding' in value))
-    ) {
+    {
       assertProp(prop, key, value, vm, absent);
     }
     return value
@@ -1688,7 +1691,7 @@
   /**
    * Get the default value of a prop.
    */
-  function getPropDefaultValue (vm, prop, key) {
+  function getPropDefaultValue(vm, prop, key) {
     // no default, return undefined
     if (!hasOwn(prop, 'default')) {
       return undefined
@@ -1696,43 +1699,24 @@
     var def = prop.default;
     // warn against non-factory defaults for Object & Array
     if (isObject(def)) {
-      warn(
-        'Invalid default value for prop "' + key + '": ' +
-        'Props with type Object/Array must use a factory function ' +
-        'to return the default value.',
-        vm
-      );
+      warn('Invalid default value for prop "' + key + '": ' + 'Props with type Object/Array must use a factory function ' + 'to return the default value.', vm);
     }
     // the raw prop value was also undefined from previous render,
     // return previous default value to avoid unnecessary watcher trigger
-    if (vm && vm.$options.propsData &&
-      vm.$options.propsData[key] === undefined &&
-      vm._props[key] !== undefined
-    ) {
+    if (vm && vm.$options.propsData && vm.$options.propsData[key] === undefined && vm._props[key] !== undefined) {
       return vm._props[key]
     }
     // call factory function for non-Function types
     // a value is Function if its prototype is function even across different execution context
-    return typeof def === 'function' && getType(prop.type) !== 'Function'
-      ? def.call(vm)
-      : def
+    return typeof def === 'function' && getType(prop.type) !== 'Function' ? def.call(vm) : def
   }
 
   /**
    * Assert whether a prop is valid.
    */
-  function assertProp (
-    prop,
-    name,
-    value,
-    vm,
-    absent
-  ) {
+  function assertProp(prop, name, value, vm, absent) {
     if (prop.required && absent) {
-      warn(
-        'Missing required prop: "' + name + '"',
-        vm
-      );
+      warn('Missing required prop: "' + name + '"', vm);
       return
     }
     if (value == null && !prop.required) {
@@ -1754,26 +1738,24 @@
 
     var haveExpectedTypes = expectedTypes.some(function (t) { return t; });
     if (!valid && haveExpectedTypes) {
-      warn(
-        getInvalidTypeMessage(name, value, expectedTypes),
-        vm
-      );
+      warn(getInvalidTypeMessage(name, value, expectedTypes), vm);
       return
     }
     var validator = prop.validator;
     if (validator) {
       if (!validator(value)) {
-        warn(
-          'Invalid prop: custom validator check failed for prop "' + name + '".',
-          vm
-        );
+        warn('Invalid prop: custom validator check failed for prop "' + name + '".', vm);
       }
     }
   }
 
   var simpleCheckRE = /^(String|Number|Boolean|Function|Symbol|BigInt)$/;
 
-  function assertType (value, type, vm) {
+  function assertType(
+    value,
+    type,
+    vm
+  ) {
     var valid;
     var expectedType = getType(type);
     if (simpleCheckRE.test(expectedType)) {
@@ -1797,7 +1779,7 @@
     }
     return {
       valid: valid,
-      expectedType: expectedType
+      expectedType: expectedType,
     }
   }
 
@@ -1807,40 +1789,38 @@
    * Use function string name to check built-in types,
    * because a simple equality check will fail when running
    * across different vms / iframes.
+   * 使用函数字符串名称检查内置类型，
+   * 因为简单的相等性检查在运行时会失败
+   * 跨不同的 vms / iframes
    */
-  function getType (fn) {
+  function getType(fn) {
     var match = fn && fn.toString().match(functionTypeCheckRE);
     return match ? match[1] : ''
   }
 
-  function isSameType (a, b) {
+  function isSameType(a, b) {
     return getType(a) === getType(b)
   }
 
-  function getTypeIndex (type, expectedTypes) {
+  function getTypeIndex(type, expectedTypes) {
     if (!Array.isArray(expectedTypes)) {
       return isSameType(expectedTypes, type) ? 0 : -1
     }
     for (var i = 0, len = expectedTypes.length; i < len; i++) {
       if (isSameType(expectedTypes[i], type)) {
+        // 有一个符合就return了
         return i
       }
     }
     return -1
   }
 
-  function getInvalidTypeMessage (name, value, expectedTypes) {
-    var message = "Invalid prop: type check failed for prop \"" + name + "\"." +
-      " Expected " + (expectedTypes.map(capitalize).join(', '));
+  function getInvalidTypeMessage(name, value, expectedTypes) {
+    var message = "Invalid prop: type check failed for prop \"" + name + "\"." + " Expected " + (expectedTypes.map(capitalize).join(', '));
     var expectedType = expectedTypes[0];
     var receivedType = toRawType(value);
     // check if we need to specify expected value
-    if (
-      expectedTypes.length === 1 &&
-      isExplicable(expectedType) &&
-      isExplicable(typeof value) &&
-      !isBoolean(expectedType, receivedType)
-    ) {
+    if (expectedTypes.length === 1 && isExplicable(expectedType) && isExplicable(typeof value) && !isBoolean(expectedType, receivedType)) {
       message += " with value " + (styleValue(value, expectedType));
     }
     message += ", got " + receivedType + " ";
@@ -1851,7 +1831,7 @@
     return message
   }
 
-  function styleValue (value, type) {
+  function styleValue(value, type) {
     if (type === 'String') {
       return ("\"" + value + "\"")
     } else if (type === 'Number') {
@@ -1862,11 +1842,11 @@
   }
 
   var EXPLICABLE_TYPES = ['string', 'number', 'boolean'];
-  function isExplicable (value) {
+  function isExplicable(value) {
     return EXPLICABLE_TYPES.some(function (elem) { return value.toLowerCase() === elem; })
   }
 
-  function isBoolean () {
+  function isBoolean() {
     var args = [], len = arguments.length;
     while ( len-- ) args[ len ] = arguments[ len ];
 
@@ -2177,6 +2157,7 @@
    * Recursively traverse an object to evoke all converted
    * getters, so that every nested property inside the object
    * is collected as a "deep" dependency.
+   * 递归遍历一个对象以调用所有转换的 getter，以便将对象内的每个嵌套属性都收集为“深度”依赖项。
    */
   function traverse (val) {
     _traverse(val, seenObjects);
@@ -2190,6 +2171,8 @@
       return
     }
     if (val.__ob__) {
+      // 避免重复收集依赖到watcher
+      // 例如：userArr: [user,user]
       var depId = val.__ob__.dep.id;
       if (seen.has(depId)) {
         return
@@ -2202,6 +2185,7 @@
     } else {
       keys = Object.keys(val);
       i = keys.length;
+      // val[keys[i]] 取值会触发geteer,也就触发依赖收集
       while (i--) { _traverse(val[keys[i]], seen); }
     }
   }
@@ -2250,16 +2234,11 @@
     createOnceHandler,
     vm
   ) {
-    var name, def$$1, cur, old, event;
+    var name, cur, old, event;
     for (name in on) {
-      def$$1 = cur = on[name];
+      // def = cur = on[name]
       old = oldOn[name];
       event = normalizeEvent(name);
-      /* istanbul ignore if */
-      if (__WEEX__ && isPlainObject(def$$1)) {
-        cur = def$$1.handler;
-        event.params = def$$1.params;
-      }
       if (isUndef(cur)) {
         warn(
           "Invalid handler for event \"" + (event.name) + "\": got " + String(cur),
@@ -3332,14 +3311,6 @@
       asyncFactory
     );
 
-    // Weex specific: invoke recycle-list optimized @render function for
-    // extracting cell-slot template.
-    // https://github.com/Hanks10100/weex-native-directive/tree/master/component
-    /* istanbul ignore if */
-    if (__WEEX__ && renderComponentTemplate.isRecyclableComponent(vnode)) {
-      return renderComponentTemplate.renderRecyclableComponentTemplate(vnode);
-    }
-
     return vnode;
   }
 
@@ -3467,13 +3438,11 @@
       isDef(data.key) &&
       !isPrimitive(data.key)
     ) {
-      if (!__WEEX__ || !("@binding" in data.key)) {
-        warn(
-          "Avoid using non-primitive value as key, " +
-            "use string/number value instead.",
-          context
-        );
-      }
+      warn(
+        "Avoid using non-primitive value as key, " +
+          "use string/number value instead.",
+        context
+      );
     }
     // support single function children as default scoped slot
     if (Array.isArray(children) && typeof children[0] === "function") {
@@ -4578,7 +4547,7 @@
     }
     this.cb = cb;
     this.id = ++uid$1; // uid for batching
-    this.active = true;
+    this.active = true; // teardown 后变为false
     this.dirty = this.lazy; // for lazy watchers
     this.deps = [];
     this.newDeps = [];
@@ -4625,6 +4594,8 @@
       // "touch" every property so they are all tracked as
       // dependencies for deep watching
       if (this.deep) {
+        // 递归子对象
+        // this.objthis.obj.name
         traverse(value);
       }
       popTarget();
@@ -4660,13 +4631,13 @@
         dep.removeSub(this);
       }
     }
-    var tmp = this.depIds;
+    var tmp = this.depIds; // 多余？
     this.depIds = this.newDepIds;
-    this.newDepIds = tmp;
+    this.newDepIds = tmp; // 多余？
     this.newDepIds.clear();
-    tmp = this.deps;
+    tmp = this.deps; // 多余？
     this.deps = this.newDeps;
-    this.newDeps = tmp;
+    this.newDeps = tmp; // 多余？
     this.newDeps.length = 0;
   };
 
@@ -4724,6 +4695,7 @@
   /**
    * Evaluate the value of the watcher.
    * This only gets called for lazy watchers.
+   * 只被懒惰的观察者调用。
    */
   Watcher.prototype.evaluate = function evaluate () {
     this.value = this.get();
@@ -4742,12 +4714,14 @@
 
   /**
    * Remove self from all dependencies' subscriber list.
+   * 从所有依赖项的订阅者列表中删除自己
    */
   Watcher.prototype.teardown = function teardown () {
     if (this.active) {
       // remove self from vm's watcher list
       // this is a somewhat expensive operation so we skip it
       // if the vm is being destroyed.
+      // 从 vm 的观察者列表中删除 self 这是一个有点昂贵的操作，因此如果 vm 正在被销毁，我们将跳过它。
       if (!this.vm._isBeingDestroyed) {
         remove(this.vm._watchers, this);
       }
@@ -5031,6 +5005,7 @@
     for (var key in watch) {
       var handler = watch[key];
       if (Array.isArray(handler)) {
+        // 可能为数组
         for (var i = 0; i < handler.length; i++) {
           createWatcher(vm, key, handler[i]);
         }
@@ -5095,6 +5070,7 @@
       var vm = this;
       if (isPlainObject(cb)) {
         //cb是对象
+        // new Vue options中的watch  带handler的情况
         return createWatcher(vm, expOrFn, cb, options);
       }
       options = options || {};
@@ -5106,6 +5082,7 @@
         // 立即执行
         var info = "callback for immediate watcher \"" + (watcher.expression) + "\"";
         pushTarget();
+        // 立即执行时，回调只有一个参数
         invokeWithErrorHandling(cb, vm, [watcher.value], vm, info);
         popTarget();
       }
@@ -6169,32 +6146,13 @@
           : nodeOps.createElement(tag, vnode);
         setScope(vnode);
 
-        /* istanbul ignore if */
-        if (__WEEX__) {
-          // in Weex, the default insertion order is parent-first.
-          // List items can be optimized to use children-first insertion
-          // with append="tree".
-          var appendAsTree = isDef(data) && isTrue(data.appendAsTree);
-          if (!appendAsTree) {
-            if (isDef(data)) {
-              invokeCreateHooks(vnode, insertedVnodeQueue);
-            }
-            insert(parentElm, vnode.elm, refElm);
-          }
-          createChildren(vnode, children, insertedVnodeQueue);
-          if (appendAsTree) {
-            if (isDef(data)) {
-              invokeCreateHooks(vnode, insertedVnodeQueue);
-            }
-            insert(parentElm, vnode.elm, refElm);
-          }
-        } else {
-          createChildren(vnode, children, insertedVnodeQueue);
-          if (isDef(data)) {
-            invokeCreateHooks(vnode, insertedVnodeQueue);
-          }
-          insert(parentElm, vnode.elm, refElm);
+
+        createChildren(vnode, children, insertedVnodeQueue);
+        if (isDef(data)) {
+          invokeCreateHooks(vnode, insertedVnodeQueue);
         }
+        insert(parentElm, vnode.elm, refElm);
+
 
         if (data && data.pre) {
           creatingElmInVPre--;
@@ -7991,7 +7949,9 @@
     }
     var on = vnode.data.on || {};
     var oldOn = oldVnode.data.on || {};
-    target$1 = vnode.elm;
+    // vnode is empty when removing all listeners,
+    // and use old vnode dom element
+    target$1 = vnode.elm || oldVnode.elm;
     normalizeEvents(on);
     updateListeners(on, oldOn, add$1, remove$2, createOnceHandler$1, vnode.context);
     target$1 = undefined;
@@ -7999,7 +7959,8 @@
 
   var events = {
     create: updateDOMListeners,
-    update: updateDOMListeners
+    update: updateDOMListeners,
+    destroy: function (vnode) { return updateDOMListeners(vnode, emptyNode); }
   };
 
   /*  */
@@ -9558,7 +9519,7 @@
       }
     }
     if (staticClass) {
-      el.staticClass = JSON.stringify(staticClass);
+      el.staticClass = JSON.stringify(staticClass.replace(/\s+/g, ' ').trim());
     }
     var classBinding = getBindingAttr(el, 'class', false /* getStatic */);
     if (classBinding) {
@@ -11253,24 +11214,6 @@
     }
   }
 
-  // Generate handler code with binding params on Weex
-  /* istanbul ignore next */
-  function genWeexHandler (params, handlerCode) {
-    var innerHandlerCode = handlerCode;
-    var exps = params.filter(function (exp) { return simplePathRE.test(exp) && exp !== '$event'; });
-    var bindings = exps.map(function (exp) { return ({ '@binding': exp }); });
-    var args = exps.map(function (exp, i) {
-      var key = "$_" + (i + 1);
-      innerHandlerCode = innerHandlerCode.replace(exp, key);
-      return key
-    });
-    args.push('$event');
-    return '{\n' +
-      "handler:function(" + (args.join(',')) + "){" + innerHandlerCode + "},\n" +
-      "params:" + (JSON.stringify(bindings)) + "\n" +
-      '}'
-  }
-
   function genHandler (handler) {
     if (!handler) {
       return 'function(){}'
@@ -11287,10 +11230,6 @@
     if (!handler.modifiers) {
       if (isMethodPath || isFunctionExpression) {
         return handler.value
-      }
-      /* istanbul ignore if */
-      if (__WEEX__ && handler.params) {
-        return genWeexHandler(handler.params, handler.value)
       }
       return ("function($event){" + (isFunctionInvocation ? ("return " + (handler.value)) : handler.value) + "}") // inline statement
     } else {
@@ -11330,10 +11269,6 @@
           : isFunctionInvocation
             ? ("return " + (handler.value))
             : handler.value;
-      /* istanbul ignore if */
-      if (__WEEX__ && handler.params) {
-        return genWeexHandler(handler.params, code + handlerCode)
-      }
       return ("function($event){" + code + handlerCode + "}")
     }
   }
@@ -11944,9 +11879,7 @@
     var dynamicProps = "";
     for (var i = 0; i < props.length; i++) {
       var prop = props[i];
-      var value = __WEEX__
-        ? generateValue(prop.value)
-        : transformSpecialNewlines(prop.value);
+      var value = transformSpecialNewlines(prop.value);
       if (prop.dynamic) {
         dynamicProps += (prop.name) + "," + value + ",";
       } else {
@@ -11959,14 +11892,6 @@
     } else {
       return staticProps;
     }
-  }
-
-  /* istanbul ignore next */
-  function generateValue(value) {
-    if (typeof value === "string") {
-      return transformSpecialNewlines(value);
-    }
-    return JSON.stringify(value);
   }
 
   // #3895, #4268

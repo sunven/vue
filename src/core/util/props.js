@@ -45,10 +45,7 @@ export function validateProp(key: string, propOptions: Object, propsData: Object
     toggleObserving(prevShouldObserve)
   }
   if (
-    process.env.NODE_ENV !== 'production' &&
-    // skip validation for weex recycle-list child component props
-    !(__WEEX__ && isObject(value) && '@binding' in value)
-  ) {
+    process.env.NODE_ENV !== 'production') {
     assertProp(prop, key, value, vm, absent)
   }
   return value

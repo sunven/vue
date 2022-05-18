@@ -75,13 +75,11 @@ export function _createElement(
     isDef(data.key) &&
     !isPrimitive(data.key)
   ) {
-    if (!__WEEX__ || !("@binding" in data.key)) {
-      warn(
-        "Avoid using non-primitive value as key, " +
-          "use string/number value instead.",
-        context
-      );
-    }
+    warn(
+      "Avoid using non-primitive value as key, " +
+        "use string/number value instead.",
+      context
+    );
   }
   // support single function children as default scoped slot
   if (Array.isArray(children) && typeof children[0] === "function") {

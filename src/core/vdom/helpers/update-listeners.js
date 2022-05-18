@@ -8,7 +8,6 @@ import {
   cached,
   isUndef,
   isTrue,
-  isPlainObject
 } from 'shared/util'
 
 const normalizeEvent = cached((name: string): {
@@ -58,16 +57,11 @@ export function updateListeners (
   createOnceHandler: Function,
   vm: Component
 ) {
-  let name, def, cur, old, event
+  let name, cur, old, event
   for (name in on) {
-    def = cur = on[name]
+    // def = cur = on[name]
     old = oldOn[name]
     event = normalizeEvent(name)
-    /* istanbul ignore if */
-    if (__WEEX__ && isPlainObject(def)) {
-      cur = def.handler
-      event.params = def.params
-    }
     if (isUndef(cur)) {
       process.env.NODE_ENV !== 'production' && warn(
         `Invalid handler for event "${event.name}": got ` + String(cur),

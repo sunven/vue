@@ -18,7 +18,6 @@ module.exports = {
     "plugin:flowtype/recommended"
   ],
   globals: {
-    "__WEEX__": true,
     "WXEnvironment": true
   },
   rules: {

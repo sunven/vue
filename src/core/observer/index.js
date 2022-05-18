@@ -151,7 +151,7 @@ export function defineReactive(
   shallow?: boolean
 ) {
   //Dep与属性一一对应
-  const dep = new Dep();
+  const dep = new Dep(key);
 
   const property = Object.getOwnPropertyDescriptor(obj, key);
   if (property && property.configurable === false) {

@@ -67,7 +67,7 @@ export default class Watcher {
     }
     this.cb = cb;
     this.id = ++uid; // uid for batching
-    this.active = true;
+    this.active = true; // teardown 后变为false
     this.dirty = this.lazy; // for lazy watchers
     this.deps = [];
     this.newDeps = [];
@@ -115,6 +115,8 @@ export default class Watcher {
       // "touch" every property so they are all tracked as
       // dependencies for deep watching
       if (this.deep) {
+        // 递归子对象
+        // this.obj  this.obj.name
         traverse(value);
       }
       popTarget();
@@ -150,13 +152,13 @@ export default class Watcher {
         dep.removeSub(this);
       }
     }
-    let tmp = this.depIds;
+    let tmp = this.depIds; // 多余？
     this.depIds = this.newDepIds;
-    this.newDepIds = tmp;
+    this.newDepIds = tmp; // 多余？
     this.newDepIds.clear();
-    tmp = this.deps;
+    tmp = this.deps; // 多余？
     this.deps = this.newDeps;
-    this.newDeps = tmp;
+    this.newDeps = tmp; // 多余？
     this.newDeps.length = 0;
   }
 
@@ -214,6 +216,7 @@ export default class Watcher {
   /**
    * Evaluate the value of the watcher.
    * This only gets called for lazy watchers.
+   * 只被懒惰的观察者调用。
    */
   evaluate() {
     this.value = this.get();
@@ -232,12 +235,14 @@ export default class Watcher {
 
   /**
    * Remove self from all dependencies' subscriber list.
+   * 从所有依赖项的订阅者列表中删除自己
    */
   teardown() {
     if (this.active) {
       // remove self from vm's watcher list
       // this is a somewhat expensive operation so we skip it
       // if the vm is being destroyed.
+      // 从 vm 的观察者列表中删除 self 这是一个有点昂贵的操作，因此如果 vm 正在被销毁，我们将跳过它。
       if (!this.vm._isBeingDestroyed) {
         remove(this.vm._watchers, this);
       }

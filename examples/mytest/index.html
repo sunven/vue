@@ -1,41 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <script src="../../dist/vue.js"></script>
-  </head>
-  <body>
-    <div id="app"><p>{{count}}</p></div>
-    <script>
-      let vm = new Vue({
-        //el: "#app",
-        data: {
-          count: 1,
-        },
-        // render(h) {
-        //   return h("div", this.count);
-        // },
 
-        mounted() {
-          // this.count = Math.random();
-          // console.log(this.count);
-          // this.count = Math.random();
-          // console.log(this.count);
-          // console.log("p.innerHTML", this.$refs.refP.innerHTML);
-          // Promise.resolve().then(() => {
-          //   console.log("promise:p.innerHTML", this.$refs.refP.innerHTML);
-          // });
-          // this.$nextTick(() => {
-          //   console.log("tick:p.innerHTML", this.$refs.refP.innerHTML);
-          // });
-          // setInterval(() => {
-          //   this.count = Math.random();
-          // }, 2000);
-        },
-      }).$mount("#app");
-    </script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <script src="../../dist/vue.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <p v-if="vif">{{ msg1 }}</p>
+    <p v-else>{{ msg2 }}</p>
+    <button @click="vif=!vif">toggle</button>
+    <button @click="msg1+='a'">changeMsg1</button>
+    <button @click="msg2+='b'">changeMsg2</button>
+  </div>
+  <script>
+    // Vue.component('A1', { template: '' })
+    let vm = new Vue({
+      //el: "#app",
+      data: {
+        msg1: 'a',
+        msg2: 'b',
+        vif: true
+      },
+      watch: {
+        msg1: function (a, b) {
+          console.log('watch', 'msg1', a, b)
+        }
+      },
+      methods: {
+        fun() {
+          console.log('fun', this.count)
+        }
+      },
+      mounted() {
+        // this.count = Math.random();
+        // console.log(this.count);
+        // this.count = Math.random();
+        // console.log(this.count);
+        // console.log("p.innerHTML", this.$refs.refP.innerHTML);
+        // Promise.resolve().then(() => {
+        //   console.log("promise:p.innerHTML", this.$refs.refP.innerHTML);
+        // });
+        // this.$nextTick(() => {
+        //   console.log("tick:p.innerHTML", this.$refs.refP.innerHTML);
+        // });
+        // setInterval(() => {
+        //   this.count = Math.random();
+        // }, 2000);
+      },
+    }).$mount("#app");
+  </script>
+</body>
+
 </html>
