@@ -18,7 +18,6 @@
     <button @click="msg2+='b'">changeMsg2</button>
   </div>
   <script>
-    // Vue.component('A1', { template: '' })
     let vm = new Vue({
       //el: "#app",
       data: {
@@ -32,25 +31,10 @@
         }
       },
       methods: {
-        fun() {
-          console.log('fun', this.count)
-        }
+
       },
       mounted() {
-        // this.count = Math.random();
-        // console.log(this.count);
-        // this.count = Math.random();
-        // console.log(this.count);
-        // console.log("p.innerHTML", this.$refs.refP.innerHTML);
-        // Promise.resolve().then(() => {
-        //   console.log("promise:p.innerHTML", this.$refs.refP.innerHTML);
-        // });
-        // this.$nextTick(() => {
-        //   console.log("tick:p.innerHTML", this.$refs.refP.innerHTML);
-        // });
-        // setInterval(() => {
-        //   this.count = Math.random();
-        // }, 2000);
+
       },
     }).$mount("#app");
   </script>

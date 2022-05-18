@@ -171,6 +171,7 @@ export function defineReactive(
     enumerable: true,
     configurable: true,
     get: function reactiveGetter() {
+      console.log('get',key)
       const value = getter ? getter.call(obj) : val;
       //Dep.target为当前Watcher实例
       if (Dep.target) {

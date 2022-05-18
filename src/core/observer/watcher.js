@@ -152,14 +152,14 @@ export default class Watcher {
         dep.removeSub(this);
       }
     }
-    let tmp = this.depIds; // 多余？
+    let tmp = this.depIds;
     this.depIds = this.newDepIds;
-    this.newDepIds = tmp; // 多余？
-    this.newDepIds.clear();
-    tmp = this.deps; // 多余？
+    this.newDepIds = tmp;
+    this.newDepIds.clear(); // 老的新的一起清空
+    tmp = this.deps;
     this.deps = this.newDeps;
-    this.newDeps = tmp; // 多余？
-    this.newDeps.length = 0;
+    this.newDeps = tmp;
+    this.newDeps.length = 0; // 老的新的一起清空
   }
 
   /**
@@ -191,6 +191,7 @@ export default class Watcher {
         // Deep watchers and watchers on Object/Arrays should fire even
         // when the value is the same, because the value may
         // have mutated.
+        // 即使值相同，对象/数组上的深层观察者和观察者也应该触发，因为值可能已经发生了变异
         isObject(value) ||
         this.deep
       ) {
