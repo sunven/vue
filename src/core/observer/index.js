@@ -21,6 +21,7 @@ const arrayKeys = Object.getOwnPropertyNames(arrayMethods);
 /**
  * In some cases we may want to disable observation inside a component's
  * update computation.
+ * 在某些情况下，我们可能希望在组件的更新计算中禁用观察
  */
 export let shouldObserve: boolean = true;
 
@@ -171,7 +172,7 @@ export function defineReactive(
     enumerable: true,
     configurable: true,
     get: function reactiveGetter() {
-      console.log('get',key)
+      // console.log('get',key)
       const value = getter ? getter.call(obj) : val;
       //Dep.target为当前Watcher实例
       if (Dep.target) {

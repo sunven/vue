@@ -35,6 +35,7 @@ const componentVNodeHooks = {
       componentVNodeHooks.prepatch(mountedNode, mountedNode);
     } else {
       // 实例
+      // 构造函数在vnode componentOptions.Ctor上  由执行render创建vnode时生成
       const child = (vnode.componentInstance = createComponentInstanceForVnode(
         vnode,
         activeInstance
@@ -135,17 +136,21 @@ export function createComponent(
 
   // resolve constructor options in case global mixins are applied after
   // component constructor creation
+  // 解决构造函数选项，以防在组件构造函数创建后应用全局混合
   resolveConstructorOptions(Ctor);
 
   // transform component v-model data into props & events
+  // v-model 转换
   if (isDef(data.model)) {
     transformModel(Ctor.options, data);
   }
 
   // extract props
+  // 提取props
   const propsData = extractPropsFromVNodeData(data, Ctor, tag);
 
   // functional component
+  // 函数式组件
   if (isTrue(Ctor.options.functional)) {
     return createFunctionalComponent(Ctor, propsData, data, context, children);
   }

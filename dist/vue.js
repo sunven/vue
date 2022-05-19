@@ -920,6 +920,7 @@
   /**
    * In some cases we may want to disable observation inside a component's
    * update computation.
+   * 在某些情况下，我们可能希望在组件的更新计算中禁用观察
    */
   var shouldObserve = true;
 
@@ -1064,7 +1065,7 @@
       enumerable: true,
       configurable: true,
       get: function reactiveGetter() {
-        console.log('get',key);
+        // console.log('get',key)
         var value = getter ? getter.call(obj) : val;
         //Dep.target为当前Watcher实例
         if (Dep.target) {
@@ -1678,12 +1679,14 @@
       value = getPropDefaultValue(vm, prop, key);
       // since the default value is a fresh copy,
       // make sure to observe it.
+      // 由于默认值是新副本，请务必遵守
       var prevShouldObserve = shouldObserve;
       toggleObserving(true);
       observe(value);
       toggleObserving(prevShouldObserve);
     }
     {
+        // 验证值与类型是否匹配
       assertProp(prop, key, value, vm, absent);
     }
     return value
@@ -1699,16 +1702,19 @@
     }
     var def = prop.default;
     // warn against non-factory defaults for Object & Array
+    // 警告对象和数组必须是个工厂函数
     if (isObject(def)) {
       warn('Invalid default value for prop "' + key + '": ' + 'Props with type Object/Array must use a factory function ' + 'to return the default value.', vm);
     }
     // the raw prop value was also undefined from previous render,
     // return previous default value to avoid unnecessary watcher trigger
+    // 原始道具值也未从之前的渲染中定义，返回之前的默认值以避免不必要的观察者触发
     if (vm && vm.$options.propsData && vm.$options.propsData[key] === undefined && vm._props[key] !== undefined) {
       return vm._props[key]
     }
     // call factory function for non-Function types
     // a value is Function if its prototype is function even across different execution context
+    // 为非函数类型调用工厂函数，如果它的原型是函数，即使在不同的执行上下文中，值也是函数
     return typeof def === 'function' && getType(prop.type) !== 'Function' ? def.call(vm) : def
   }
 
@@ -2139,6 +2145,7 @@
     initProxy = function initProxy (vm) {
       if (hasProxy) {
         // determine which proxy handler to use
+        // 确定使用哪个代理处理程序
         var options = vm.$options;
         var handlers = options.render && options.render._withStripped
           ? getHandler
@@ -2311,6 +2318,7 @@
     // we are only extracting raw values here.
     // validation and default values are handled in the child
     // component itself.
+    // 我们在这里只提取原始值。 验证和默认值在子组件本身中处理
     var propOptions = Ctor.options.props;
     if (isUndef(propOptions)) {
       return
@@ -3159,6 +3167,7 @@
         componentVNodeHooks.prepatch(mountedNode, mountedNode);
       } else {
         // 实例
+        // 构造函数在vnode componentOptions.Ctor上  由执行render创建vnode时生成
         var child = (vnode.componentInstance = createComponentInstanceForVnode(
           vnode,
           activeInstance
@@ -3260,17 +3269,21 @@
 
     // resolve constructor options in case global mixins are applied after
     // component constructor creation
+    // 解决构造函数选项，以防在组件构造函数创建后应用全局混合
     resolveConstructorOptions(Ctor);
 
     // transform component v-model data into props & events
+    // v-model 转换
     if (isDef(data.model)) {
       transformModel(Ctor.options, data);
     }
 
     // extract props
+    // 提取props
     var propsData = extractPropsFromVNodeData(data, Ctor, tag);
 
     // functional component
+    // 函数式组件
     if (isTrue(Ctor.options.functional)) {
       return createFunctionalComponent(Ctor, propsData, data, context, children);
     }
@@ -3439,6 +3452,7 @@
       isDef(data.key) &&
       !isPrimitive(data.key)
     ) {
+      // key应为简单类型
       warn(
         "Avoid using non-primitive value as key, " +
           "use string/number value instead.",
@@ -3446,6 +3460,7 @@
       );
     }
     // support single function children as default scoped slot
+    // 支持单功能子作为默认作用域插槽
     if (Array.isArray(children) && typeof children[0] === "function") {
       data = data || {};
       data.scopedSlots = { default: children[0] };
@@ -3495,6 +3510,7 @@
         // unknown or unlisted namespaced elements
         // check at runtime because it may get assigned a namespace when its
         // parent normalizes children
+        // 未知或未列出的命名空间元素在运行时检查，因为它可能会在其父规范化子元素时被分配一个命名空间
         vnode = new VNode(tag, data, children, undefined, undefined, context);
       }
     } else {
@@ -3597,6 +3613,7 @@
 
   function renderMixin(Vue) {
     // install runtime convenience helpers
+    // 在原型上挂 _s _v等方法，render被执行时，需要用
     installRenderHelpers(Vue.prototype);
 
     Vue.prototype.$nextTick = function (fn) {
@@ -3619,6 +3636,7 @@
 
       // set parent vnode. this allows render functions to have access
       // to the data on the placeholder node.
+      // 设置父 vnode。 这允许渲染函数访问占位符节点上的数据
       vm.$vnode = _parentVnode;
       // render self
       var vnode;
@@ -3626,8 +3644,10 @@
         // There's no need to maintain a stack because all render fns are called
         // separately from one another. Nested component's render fns are called
         // when parent component is patched.
+        // 无需维护堆栈，因为所有渲染 fns 都是彼此分开调用的。 修补父组件时调用嵌套组件的渲染 fns
         currentRenderingInstance = vm;
         // $createElement就是h
+        // 调用render得到vnode render的执行，也会触发 data/props的getter 收集依赖
         vnode = render.call(vm._renderProxy, vm.$createElement);
       } catch (e) {
         handleError(e, vm, "render");
@@ -4035,7 +4055,7 @@
       var prevVnode = vm._vnode;
       var restoreActiveInstance = setActiveInstance(vm);
       vm._vnode = vnode;
-      // Vue.prototype.__patch__ 已经在入口处注入
+      // Vue.prototype.__patch__ 已经在入口处注入 src/platforms/web/runtime/index.js
       // based on the rendering backend used.
       if (!prevVnode) {
         // 初始渲染
@@ -4118,6 +4138,7 @@
   ) {
     vm.$el = el;
     if (!vm.$options.render) {
+      // 没得到render函数
       vm.$options.render = createEmptyVNode;
       {
         /* istanbul ignore if */
@@ -4635,7 +4656,7 @@
     var tmp = this.depIds;
     this.depIds = this.newDepIds;
     this.newDepIds = tmp;
-    this.newDepIds.clear(); // 老的新的一起清空
+    this.newDepIds.clear(); // 老的新的一起清空 引用类型 不多余
     tmp = this.deps;
     this.deps = this.newDeps;
     this.newDeps = tmp;
@@ -4698,6 +4719,7 @@
    * Evaluate the value of the watcher.
    * This only gets called for lazy watchers.
    * 只被懒惰的观察者调用。
+   * computed watcher
    */
   Watcher.prototype.evaluate = function evaluate () {
     this.value = this.get();
@@ -4717,6 +4739,8 @@
   /**
    * Remove self from all dependencies' subscriber list.
    * 从所有依赖项的订阅者列表中删除自己
+   * $watch 返回 teardown
+   * $destroy 执行 teardown
    */
   Watcher.prototype.teardown = function teardown () {
     if (this.active) {
@@ -4775,10 +4799,12 @@
     var props = (vm._props = {});
     // cache prop keys so that future props updates can iterate using Array
     // instead of dynamic object key enumeration.
+    // 缓存 prop 键，以便将来的 props 更新可以使用 Array 而不是动态对象键枚举进行迭代
     var keys = (vm.$options._propKeys = []);
     var isRoot = !vm.$parent;
     // root instance props should be converted
     if (!isRoot) {
+      // 非根，禁用观察
       toggleObserving(false);
     }
     var loop = function ( key ) {
@@ -4788,6 +4814,7 @@
       {
         var hyphenatedKey = hyphenate(key);
         if (
+          // key,ref,slot,slot-scope,is
           isReservedAttribute(hyphenatedKey) ||
           config.isReservedAttr(hyphenatedKey)
         ) {
@@ -4798,6 +4825,7 @@
         }
         defineReactive$$1(props, key, value, function () {
           if (!isRoot && !isUpdatingChildComponent) {
+            // 避免直接改变 prop，因为只要父组件重新渲染，该值就会被覆盖。 相反，使用基于道具值的数据或计算属性。 正在变异的道具：key
             warn(
               "Avoid mutating a prop directly since the value will be " +
                 "overwritten whenever the parent component re-renders. " +
@@ -4811,6 +4839,7 @@
       // static props are already proxied on the component's prototype
       // during Vue.extend(). We only need to proxy props defined at
       // instantiation here.
+      // 在 Vue.extend() 期间，静态道具已经代理在组件的原型上。 我们只需要在此处代理实例化时定义的道具
       if (!(key in vm)) {
         proxy(vm, "_props", key);
       }
@@ -4962,6 +4991,7 @@
           watcher.evaluate();
         }
         if (Dep.target) {
+          // Dep.target 为 randerWatcher,watcher 为 computedWatcher
           watcher.depend();
         }
         return watcher.value;
@@ -5134,10 +5164,10 @@
       }
       // expose real self
       vm._self = vm;
-      // $parent/$root/$children
+      // $parent/$root/$children 给默认值
       initLifecycle(vm);
       initEvents(vm);
-      //$slots/$createElement
+      //$slots/$createElement/$attrs/$listeners
       initRender(vm);
       callHook(vm, "beforeCreate");
       initInjections(vm); // 在 data/props 前注入
@@ -6119,13 +6149,14 @@
       vnode.isRootInsert = !nested; // for transition enter check
       // 自定义组件创建
       if (createComponent(vnode, insertedVnodeQueue, parentElm, refElm)) {
+        // 第一次不会进这里  是#app div
         return;
       }
 
       // 原生标签
       var data = vnode.data;
-      var children = vnode.children;
-      var tag = vnode.tag;
+      // 就可能是组件了
+      var children = vnode.children;    var tag = vnode.tag;
       if (isDef(tag)) {
         {
           if (data && data.pre) {
@@ -6148,7 +6179,7 @@
           : nodeOps.createElement(tag, vnode);
         setScope(vnode);
 
-
+        // 根据子vnode 创建
         createChildren(vnode, children, insertedVnodeQueue);
         if (isDef(data)) {
           invokeCreateHooks(vnode, insertedVnodeQueue);
@@ -6175,7 +6206,7 @@
         // 缓存情况 keepAlive
         var isReactivated = isDef(vnode.componentInstance) && i.keepAlive;
         // init存在就执行
-        // 这里的init是组件上的hook
+        // 这里的init是组件上的hook 会执行构造函数，得到组件实例
         if (isDef((i = i.hook)) && isDef((i = i.init))) {
           i(vnode, false /* hydrating */);
         }
@@ -6185,7 +6216,7 @@
         // in that case we can just return the element and be done.
         // 如果组件实例已存在
         if (isDef(vnode.componentInstance)) {
-          // 初始化组件 属性，事件
+          // 初始化组件 属性，事件  vnode上已经有了props的值
           initComponent(vnode, insertedVnodeQueue);
           // 插入dom
           insert(parentElm, vnode.elm, refElm);
@@ -6845,11 +6876,12 @@
           // patch existing root node
           patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly);
         } else {
-          //真实节点（首次）
+          //oldVnode是真实节点（首次）
           if (isRealElement) {
             // mounting to a real element
             // check if this is server-rendered content and if we can perform
             // a successful hydration.
+            // 安装到真实元素检查这是否是服务器渲染的内容，以及我们是否可以成功进行水合。
             if (oldVnode.nodeType === 1 && oldVnode.hasAttribute(SSR_ATTR)) {
               oldVnode.removeAttribute(SSR_ATTR);
               hydrating = true;

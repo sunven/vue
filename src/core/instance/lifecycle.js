@@ -62,7 +62,7 @@ export function lifecycleMixin(Vue: Class<Component>) {
     const prevVnode = vm._vnode;
     const restoreActiveInstance = setActiveInstance(vm);
     vm._vnode = vnode;
-    // Vue.prototype.__patch__ 已经在入口处注入
+    // Vue.prototype.__patch__ 已经在入口处注入 src/platforms/web/runtime/index.js
     // based on the rendering backend used.
     if (!prevVnode) {
       // 初始渲染
@@ -145,6 +145,7 @@ export function mountComponent(
 ): Component {
   vm.$el = el;
   if (!vm.$options.render) {
+    // 没得到render函数
     vm.$options.render = createEmptyVNode;
     if (process.env.NODE_ENV !== "production") {
       /* istanbul ignore if */

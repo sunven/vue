@@ -11,30 +11,32 @@
 
 <body>
   <div id="app">
-    <p v-if="vif">{{ msg1 }}</p>
-    <p v-else>{{ msg2 }}</p>
-    <button @click="vif=!vif">toggle</button>
-    <button @click="msg1+='a'">changeMsg1</button>
-    <button @click="msg2+='b'">changeMsg2</button>
+    <!-- <p>{{ msg1 }}</p>
+    <p>{{ msg2 }}</p> -->
+    <!-- <input v-model="msg1" /> -->
+    <!-- <p>{{ msg }}</p> -->
+    <A1 :a="msg1"></A1>
+    <!-- <button @click="msg1+='a'">changeMsg1</button>
+    <button @click="msg2+='b'">changeMsg2</button> -->
   </div>
   <script>
+    Vue.component('A1', { template: '<div>{{a}}</div>', props: ['a'] })
     let vm = new Vue({
       //el: "#app",
       data: {
-        msg1: 'a',
+        msg1: 'a111',
         msg2: 'b',
-        vif: true
       },
-      watch: {
-        msg1: function (a, b) {
-          console.log('watch', 'msg1', a, b)
+      computed: {
+        msg: function () {
+          console.log('computed', 'msg')
+          return this.msg1 + this.msg2
         }
       },
-      methods: {
-
-      },
       mounted() {
-
+        setTimeout(() => {
+          console.log('setTimeout', this.msg)
+        }, 2000)
       },
     }).$mount("#app");
   </script>

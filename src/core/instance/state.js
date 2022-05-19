@@ -67,10 +67,12 @@ function initProps(vm: Component, propsOptions: Object) {
   const props = (vm._props = {});
   // cache prop keys so that future props updates can iterate using Array
   // instead of dynamic object key enumeration.
+  // 缓存 prop 键，以便将来的 props 更新可以使用 Array 而不是动态对象键枚举进行迭代
   const keys = (vm.$options._propKeys = []);
   const isRoot = !vm.$parent;
   // root instance props should be converted
   if (!isRoot) {
+    // 非根，禁用观察
     toggleObserving(false);
   }
   for (const key in propsOptions) {
@@ -80,6 +82,7 @@ function initProps(vm: Component, propsOptions: Object) {
     if (process.env.NODE_ENV !== "production") {
       const hyphenatedKey = hyphenate(key);
       if (
+        // key,ref,slot,slot-scope,is
         isReservedAttribute(hyphenatedKey) ||
         config.isReservedAttr(hyphenatedKey)
       ) {
@@ -90,6 +93,7 @@ function initProps(vm: Component, propsOptions: Object) {
       }
       defineReactive(props, key, value, () => {
         if (!isRoot && !isUpdatingChildComponent) {
+          // 避免直接改变 prop，因为只要父组件重新渲染，该值就会被覆盖。 相反，使用基于道具值的数据或计算属性。 正在变异的道具：key
           warn(
             `Avoid mutating a prop directly since the value will be ` +
               `overwritten whenever the parent component re-renders. ` +
@@ -105,6 +109,7 @@ function initProps(vm: Component, propsOptions: Object) {
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
+    // 在 Vue.extend() 期间，静态道具已经代理在组件的原型上。 我们只需要在此处代理实例化时定义的道具
     if (!(key in vm)) {
       proxy(vm, `_props`, key);
     }
@@ -257,6 +262,7 @@ function createComputedGetter(key) {
         watcher.evaluate();
       }
       if (Dep.target) {
+        // Dep.target 为 randerWatcher,watcher 为 computedWatcher
         watcher.depend();
       }
       return watcher.value;

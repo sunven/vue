@@ -155,7 +155,7 @@ export default class Watcher {
     let tmp = this.depIds;
     this.depIds = this.newDepIds;
     this.newDepIds = tmp;
-    this.newDepIds.clear(); // 老的新的一起清空
+    this.newDepIds.clear(); // 老的新的一起清空 引用类型 不多余
     tmp = this.deps;
     this.deps = this.newDeps;
     this.newDeps = tmp;
@@ -218,6 +218,7 @@ export default class Watcher {
    * Evaluate the value of the watcher.
    * This only gets called for lazy watchers.
    * 只被懒惰的观察者调用。
+   * computed watcher
    */
   evaluate() {
     this.value = this.get();
@@ -237,6 +238,8 @@ export default class Watcher {
   /**
    * Remove self from all dependencies' subscriber list.
    * 从所有依赖项的订阅者列表中删除自己
+   * $watch 返回 teardown
+   * $destroy 执行 teardown
    */
   teardown() {
     if (this.active) {

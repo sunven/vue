@@ -46,14 +46,15 @@ export function initMixin(Vue: Class<Component>) {
     if (process.env.NODE_ENV !== "production") {
       initProxy(vm);
     } else {
+      // 调用render得到vnode是，上下文就是_renderProxy
       vm._renderProxy = vm;
     }
     // expose real self
     vm._self = vm;
-    // $parent/$root/$children
+    // $parent/$root/$children 给默认值
     initLifecycle(vm);
     initEvents(vm);
-    //$slots/$createElement
+    //$slots/$createElement/$attrs/$listeners
     initRender(vm);
     callHook(vm, "beforeCreate");
     initInjections(vm); // 在 data/props 前注入

@@ -151,12 +151,14 @@ export function createPatchFunction(backend) {
     vnode.isRootInsert = !nested; // for transition enter check
     // 自定义组件创建
     if (createComponent(vnode, insertedVnodeQueue, parentElm, refElm)) {
+      // 第一次不会进这里  是#app div
       return;
     }
 
     // 原生标签
     const data = vnode.data;
-    const children = vnode.children;
+    // 就可能是组件了
+    const children = vnode.children; children
     const tag = vnode.tag;
     if (isDef(tag)) {
       if (process.env.NODE_ENV !== "production") {
@@ -180,7 +182,7 @@ export function createPatchFunction(backend) {
         : nodeOps.createElement(tag, vnode);
       setScope(vnode);
 
-
+      // 根据子vnode 创建
       createChildren(vnode, children, insertedVnodeQueue);
       if (isDef(data)) {
         invokeCreateHooks(vnode, insertedVnodeQueue);
@@ -207,7 +209,7 @@ export function createPatchFunction(backend) {
       // 缓存情况 keepAlive
       const isReactivated = isDef(vnode.componentInstance) && i.keepAlive;
       // init存在就执行
-      // 这里的init是组件上的hook
+      // 这里的init是组件上的hook 会执行构造函数，得到组件实例
       if (isDef((i = i.hook)) && isDef((i = i.init))) {
         i(vnode, false /* hydrating */);
       }
@@ -217,7 +219,7 @@ export function createPatchFunction(backend) {
       // in that case we can just return the element and be done.
       // 如果组件实例已存在
       if (isDef(vnode.componentInstance)) {
-        // 初始化组件 属性，事件
+        // 初始化组件 属性，事件  vnode上已经有了props的值
         initComponent(vnode, insertedVnodeQueue);
         // 插入dom
         insert(parentElm, vnode.elm, refElm);
@@ -877,11 +879,12 @@ export function createPatchFunction(backend) {
         // patch existing root node
         patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly);
       } else {
-        //真实节点（首次）
+        //oldVnode是真实节点（首次）
         if (isRealElement) {
           // mounting to a real element
           // check if this is server-rendered content and if we can perform
           // a successful hydration.
+          // 安装到真实元素检查这是否是服务器渲染的内容，以及我们是否可以成功进行水合。
           if (oldVnode.nodeType === 1 && oldVnode.hasAttribute(SSR_ATTR)) {
             oldVnode.removeAttribute(SSR_ATTR);
             hydrating = true;

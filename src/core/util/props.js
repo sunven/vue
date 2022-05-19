@@ -39,6 +39,7 @@ export function validateProp(key: string, propOptions: Object, propsData: Object
     value = getPropDefaultValue(vm, prop, key)
     // since the default value is a fresh copy,
     // make sure to observe it.
+    // 由于默认值是新副本，请务必遵守
     const prevShouldObserve = shouldObserve
     toggleObserving(true)
     observe(value)
@@ -46,6 +47,7 @@ export function validateProp(key: string, propOptions: Object, propsData: Object
   }
   if (
     process.env.NODE_ENV !== 'production') {
+      // 验证值与类型是否匹配
     assertProp(prop, key, value, vm, absent)
   }
   return value
@@ -61,16 +63,19 @@ function getPropDefaultValue(vm: ?Component, prop: PropOptions, key: string): an
   }
   const def = prop.default
   // warn against non-factory defaults for Object & Array
+  // 警告对象和数组必须是个工厂函数
   if (process.env.NODE_ENV !== 'production' && isObject(def)) {
     warn('Invalid default value for prop "' + key + '": ' + 'Props with type Object/Array must use a factory function ' + 'to return the default value.', vm)
   }
   // the raw prop value was also undefined from previous render,
   // return previous default value to avoid unnecessary watcher trigger
+  // 原始道具值也未从之前的渲染中定义，返回之前的默认值以避免不必要的观察者触发
   if (vm && vm.$options.propsData && vm.$options.propsData[key] === undefined && vm._props[key] !== undefined) {
     return vm._props[key]
   }
   // call factory function for non-Function types
   // a value is Function if its prototype is function even across different execution context
+  // 为非函数类型调用工厂函数，如果它的原型是函数，即使在不同的执行上下文中，值也是函数
   return typeof def === 'function' && getType(prop.type) !== 'Function' ? def.call(vm) : def
 }
 

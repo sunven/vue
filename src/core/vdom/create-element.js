@@ -75,6 +75,7 @@ export function _createElement(
     isDef(data.key) &&
     !isPrimitive(data.key)
   ) {
+    // key应为简单类型
     warn(
       "Avoid using non-primitive value as key, " +
         "use string/number value instead.",
@@ -82,6 +83,7 @@ export function _createElement(
     );
   }
   // support single function children as default scoped slot
+  // 支持单功能子作为默认作用域插槽
   if (Array.isArray(children) && typeof children[0] === "function") {
     data = data || {};
     data.scopedSlots = { default: children[0] };
@@ -132,6 +134,7 @@ export function _createElement(
       // unknown or unlisted namespaced elements
       // check at runtime because it may get assigned a namespace when its
       // parent normalizes children
+      // 未知或未列出的命名空间元素在运行时检查，因为它可能会在其父规范化子元素时被分配一个命名空间
       vnode = new VNode(tag, data, children, undefined, undefined, context);
     }
   } else {

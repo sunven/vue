@@ -87,6 +87,7 @@ export function setCurrentRenderingInstance(vm: Component) {
 
 export function renderMixin(Vue: Class<Component>) {
   // install runtime convenience helpers
+  // 在原型上挂 _s _v等方法，render被执行时，需要用
   installRenderHelpers(Vue.prototype);
 
   Vue.prototype.$nextTick = function (fn: Function) {
@@ -107,6 +108,7 @@ export function renderMixin(Vue: Class<Component>) {
 
     // set parent vnode. this allows render functions to have access
     // to the data on the placeholder node.
+    // 设置父 vnode。 这允许渲染函数访问占位符节点上的数据
     vm.$vnode = _parentVnode;
     // render self
     let vnode;
@@ -114,8 +116,10 @@ export function renderMixin(Vue: Class<Component>) {
       // There's no need to maintain a stack because all render fns are called
       // separately from one another. Nested component's render fns are called
       // when parent component is patched.
+      // 无需维护堆栈，因为所有渲染 fns 都是彼此分开调用的。 修补父组件时调用嵌套组件的渲染 fns
       currentRenderingInstance = vm;
       // $createElement就是h
+      // 调用render得到vnode render的执行，也会触发 data/props的getter 收集依赖
       vnode = render.call(vm._renderProxy, vm.$createElement);
     } catch (e) {
       handleError(e, vm, `render`);
