@@ -15,13 +15,14 @@
     <p>{{ msg2 }}</p> -->
     <!-- <input v-model="msg1" /> -->
     <!-- <p>{{ msg }}</p> -->
-    <A1 :a="msg1"></A1>
+    <A1 @click="clickHandle" :a="msg1"></A1>
     <!-- <button @click="msg1+='a'">changeMsg1</button>
     <button @click="msg2+='b'">changeMsg2</button> -->
   </div>
   <script>
     Vue.component('A1', { template: '<div>{{a}}</div>', props: ['a'] })
     let vm = new Vue({
+      comments:true,
       //el: "#app",
       data: {
         msg1: 'a111',

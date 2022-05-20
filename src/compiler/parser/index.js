@@ -122,6 +122,7 @@ export function parse(
       element = processElement(element, options);
     }
     // tree management
+    // ast 树管理 维护父子管理
     if (!stack.length && element !== root) {
       // allow root elements with v-if, v-else-if and v-else
       if (root.if && (element.elseif || element.else)) {
@@ -221,6 +222,7 @@ export function parse(
     outputSourceRange: options.outputSourceRange,
     // 起始标签
     start(tag, attrs, unary, start, end) {
+      // 创建ast
       // check namespace.
       // inherit parent ns if there is one
       const ns =
@@ -290,8 +292,11 @@ export function parse(
         processRawAttrs(element);
       } else if (!element.processed) {
         // structural directives
+        // v-for
         processFor(element);
+        // v-if
         processIf(element);
+        // v-once
         processOnce(element);
       }
 
@@ -303,10 +308,11 @@ export function parse(
       }
 
       if (!unary) {
-        // 自闭和标签
+        // 非自闭和标签
         currentParent = element;
         stack.push(element);
       } else {
+        // ast 树管理
         closeElement(element);
       }
     },
@@ -371,11 +377,13 @@ export function parse(
         }
         let res;
         let child: ?ASTNode;
+        // 文本分这两种，表达式，纯文本
         if (!inVPre && text !== " " && (res = parseText(text, delimiters))) {
+          // 表达式
           child = {
             type: 2,
-            expression: res.expression,
-            tokens: res.tokens,
+            expression: res.expression, // eg: '_s(item)+":"+_s(index)'
+            tokens: res.tokens, //eg: [{'@binding':'item'},':',{'@binding':'index'}]
             text,
           };
         } else if (
@@ -383,6 +391,7 @@ export function parse(
           !children.length ||
           children[children.length - 1].text !== " "
         ) {
+          // 纯文本
           child = {
             type: 3,
             text,
@@ -529,6 +538,8 @@ type ForParseResult = {
 };
 
 export function parseFor(exp: string): ?ForParseResult {
+  // eg:v-for="(item,index) in data"
+  // for 是 data，alias 是 item，iterator1 是 index，没有 iterator2
   const inMatch = exp.match(forAliasRE);
   if (!inMatch) return;
   const res = {};
@@ -550,12 +561,14 @@ export function parseFor(exp: string): ?ForParseResult {
 function processIf(el) {
   const exp = getAndRemoveAttr(el, "v-if");
   if (exp) {
+    // 拿到v-if
     el.if = exp;
     addIfCondition(el, {
       exp: exp,
       block: el,
     });
   } else {
+    // 没拿到v-if 取v-else v-else-if
     if (getAndRemoveAttr(el, "v-else") != null) {
       el.else = true;
     }

@@ -757,7 +757,7 @@
   // This is globally unique because only one watcher
   // can be evaluated at a time.
   // 当前正在评估的目标观察者。 这是全球唯一的，因为一次只能评估一个观察者。
-  // targetStack：父组件中渲染子组件时，
+  // targetStack：父组件中渲染子组件时，renderWatcher 和 computedWatcher时
   Dep.target = null;
   var targetStack = [];
 
@@ -7506,6 +7506,8 @@
   // doesn't get processed by processAttrs.
   // By default it does NOT remove it from the map (attrsMap) because the map is
   // needed during codegen.
+  // 注意：这只会从 Array (attrsList) 中删除 attr，这样它就不会被 processAttrs 处理。
+  // 默认情况下，它不会将其从地图 (attrsMap) 中删除，因为在 codegen 期间需要地图
   function getAndRemoveAttr (
     el,
     name,
@@ -9644,6 +9646,7 @@
 
   // Elements that you can, intentionally, leave open
   // (and which close themselves)
+  // 可以不用闭合的标签
   var canBeLeftOpenTag = makeMap(
     'colgroup,dd,dt,li,options,p,td,tfoot,th,thead,tr,source'
   );
@@ -9672,6 +9675,7 @@
   var endTag = new RegExp(("^<\\/" + qnameCapture + "[^>]*>"));
   var doctype = /^<!DOCTYPE [^>]+>/i;
   // #7298: escape - to avoid being passed as HTML comment when inlined in page
+  //为什么不是 /^<!--/
   var comment = /^<!\--/;
   var conditionalComment = /^<!\[/;
 
@@ -9710,15 +9714,20 @@
     while (html) {
       last = html;
       // Make sure we're not in a plaintext content element like script/style
+      // script,style,textarea
       if (!lastTag || !isPlainTextElement(lastTag)) {
         var textEnd = html.indexOf('<');
         if (textEnd === 0) {
+          // < 开头
           // Comment:
           if (comment.test(html)) {
+            // 注释 <!--
             var commentEnd = html.indexOf('-->');
 
             if (commentEnd >= 0) {
               if (options.shouldKeepComment) {
+                // new Vue时传入 comments
+                // 当设为 true 时，将会保留且渲染模板中的 HTML 注释。默认行为是舍弃它们。
                 options.comment(html.substring(4, commentEnd), index, index + commentEnd + 3);
               }
               advance(commentEnd + 3);
@@ -9728,6 +9737,7 @@
 
           // http://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
           if (conditionalComment.test(html)) {
+            // <![if !IE]>
             var conditionalEnd = html.indexOf(']>');
 
             if (conditionalEnd >= 0) {
@@ -9737,6 +9747,7 @@
           }
 
           // Doctype:
+          // eg:<!DOCTYPE html>
           var doctypeMatch = html.match(doctype);
           if (doctypeMatch) {
             advance(doctypeMatch[0].length);
@@ -9744,8 +9755,11 @@
           }
 
           // End tag:
+          // 为什么先 match end tag, （最后进来就是end tag  eg: </div>）
           var endTagMatch = html.match(endTag);
           if (endTagMatch) {
+            // 0: "</a1>"
+            // 1: "a1"
             var curIndex = index;
             advance(endTagMatch[0].length);
             parseEndTag(endTagMatch[1], curIndex, index);
@@ -9755,6 +9769,17 @@
           // Start tag:
           var startTagMatch = parseStartTag();
           if (startTagMatch) {
+            // eg:
+            // {
+            //   "tagName": "a1",
+            //   "attrs": [
+            //     [" @click=\"clickHandle\"", "@click", "=", "clickHandle", null, null],
+            //     [" :a=\"msg1\"", ":a", "=", "msg1", null, null]
+            //   ],
+            //   "start": 140,
+            //   "unarySlash": "",
+            //   "end": 175
+            // }
             handleStartTag(startTagMatch);
             if (shouldIgnoreFirstNewline(startTagMatch.tagName, html)) {
               advance(1);
@@ -9763,8 +9788,13 @@
           }
         }
 
+        // 文本
         var text = (void 0), rest = (void 0), next = (void 0);
         if (textEnd >= 0) {
+          // 标签 < 开头 textEnd>=0
+          // 说明到从当前位置到 textEnd 位置都是文本
+          // eg: ab<cde
+          // rest: <cde
           rest = html.slice(textEnd);
           while (
             !endTag.test(rest) &&
@@ -9773,15 +9803,18 @@
             !conditionalComment.test(rest)
           ) {
             // < in plain text, be forgiving and treat it as text
+            // < 在文本中 继续找到真正的文本结束的位置，然后前进到结束的位置
             next = rest.indexOf('<', 1);
             if (next < 0) { break }
             textEnd += next;
             rest = html.slice(textEnd);
           }
+          // 文本
           text = html.substring(0, textEnd);
         }
 
         if (textEnd < 0) {
+          // 说明整个 template 解析完毕了，把剩余的 html 都赋值给了 text。
           text = html;
         }
 
@@ -9793,6 +9826,7 @@
           options.chars(text, index - text.length, index);
         }
       } else {
+        // 标签为 script,style,textarea
         var endTagLength = 0;
         var stackedTag = lastTag.toLowerCase();
         var reStackedTag = reCache[stackedTag] || (reCache[stackedTag] = new RegExp('([\\s\\S]*?)(</' + stackedTag + '[^>]*>)', 'i'));
@@ -9824,6 +9858,7 @@
         break
       }
     }
+    // while close
 
     // Clean up any remaining tags
     parseEndTag();
@@ -9834,6 +9869,8 @@
     }
 
     function parseStartTag () {
+      // 0:<div  <a1
+      // 1:div   a1
       var start = html.match(startTagOpen);
       if (start) {
         var match = {
@@ -9844,12 +9881,26 @@
         advance(start[0].length);
         var end, attr;
         while (!(end = html.match(startTagClose)) && (attr = html.match(dynamicArgAttribute) || html.match(attribute))) {
+          // 0: " id=\"app\""
+          // 1: "id"
+          // 2: "="
+          // 3: "app"
+          // 0: " @click=\"clickHandle\""
+          // 1: "@click"
+          // 2: "="
+          // 3: "clickHandle"
+          // 0: " :a=\"msg1\""
+          // 1: ":a"
+          // 2: "="
+          // 3: "msg1"
           attr.start = index;
           advance(attr[0].length);
           attr.end = index;
           match.attrs.push(attr);
         }
         if (end) {
+          // 0: ">"
+          // 1: ""
           match.unarySlash = end[1];
           advance(end[0].length);
           match.end = index;
@@ -9863,14 +9914,18 @@
       var unarySlash = match.unarySlash;
 
       if (expectHTML) {
+        // expectHTML: only false for non-web builds
         if (lastTag === 'p' && isNonPhrasingTag(tagName)) {
+          // 非规范标签 eg: dl dt
           parseEndTag(lastTag);
         }
         if (canBeLeftOpenTag$$1(tagName) && lastTag === tagName) {
+          // 可以不用闭合的标签 eg: option
           parseEndTag(tagName);
         }
       }
 
+      // 自闭和标签 eg:<br />
       var unary = isUnaryTag$$1(tagName) || !!unarySlash;
 
       var l = match.attrs.length;
@@ -9878,6 +9933,7 @@
       for (var i = 0; i < l; i++) {
         var args = match.attrs[i];
         var value = args[3] || args[4] || args[5] || '';
+        // a href 解码
         var shouldDecodeNewlines = tagName === 'a' && args[1] === 'href'
           ? options.shouldDecodeNewlinesForHref
           : options.shouldDecodeNewlines;
@@ -9892,11 +9948,17 @@
       }
 
       if (!unary) {
+        // 不是自闭和，压入栈，匹配结束标签要用
         stack.push({ tag: tagName, lowerCasedTag: tagName.toLowerCase(), attrs: attrs, start: match.start, end: match.end });
         lastTag = tagName;
       }
 
       if (options.start) {
+        // attrs eg: [
+        //   { "name": "@click", "value": "clickHandle", "start": 144, "end": 164 },
+        //   { "name": ":a", "value": "msg1", "start": 165, "end": 174 }
+        // ]
+        // 创建ast
         options.start(tagName, attrs, unary, match.start, match.end);
       }
     }
@@ -9907,6 +9969,7 @@
       if (end == null) { end = index; }
 
       // Find the closest opened tag of the same type
+      // 查找最近打开的同类型标签
       if (tagName) {
         lowerCasedTagName = tagName.toLowerCase();
         for (pos = stack.length - 1; pos >= 0; pos--) {
@@ -9936,6 +9999,7 @@
         }
 
         // Remove the open elements from the stack
+        // 从堆栈中删除打开的元素
         stack.length = pos;
         lastTag = pos && stack[pos - 1].tag;
       } else if (lowerCasedTagName === 'br') {
@@ -10052,6 +10116,7 @@
         element = processElement(element, options);
       }
       // tree management
+      // ast 树管理 维护父子管理
       if (!stack.length && element !== root) {
         // allow root elements with v-if, v-else-if and v-else
         if (root.if && (element.elseif || element.else)) {
@@ -10151,6 +10216,7 @@
       outputSourceRange: options.outputSourceRange,
       // 起始标签
       start: function start(tag, attrs, unary, start$1, end) {
+        // 创建ast
         // check namespace.
         // inherit parent ns if there is one
         var ns =
@@ -10219,8 +10285,11 @@
           processRawAttrs(element);
         } else if (!element.processed) {
           // structural directives
+          // v-for
           processFor(element);
+          // v-if
           processIf(element);
+          // v-once
           processOnce(element);
         }
 
@@ -10232,10 +10301,11 @@
         }
 
         if (!unary) {
-          // 自闭和标签
+          // 非自闭和标签
           currentParent = element;
           stack.push(element);
         } else {
+          // ast 树管理
           closeElement(element);
         }
       },
@@ -10300,11 +10370,13 @@
           }
           var res;
           var child;
+          // 文本分这两种，表达式，纯文本
           if (!inVPre && text !== " " && (res = parseText(text, delimiters))) {
+            // 表达式
             child = {
               type: 2,
-              expression: res.expression,
-              tokens: res.tokens,
+              expression: res.expression, // eg: '_s(item)+":"+_s(index)'
+              tokens: res.tokens, //eg: [{'@binding':'item'},':',{'@binding':'index'}]
               text: text,
             };
           } else if (
@@ -10312,6 +10384,7 @@
             !children.length ||
             children[children.length - 1].text !== " "
           ) {
+            // 纯文本
             child = {
               type: 3,
               text: text,
@@ -10451,6 +10524,8 @@
 
 
   function parseFor(exp) {
+    // eg:v-for="(item,index) in data"
+    // for 是 data，alias 是 item，iterator1 是 index，没有 iterator2
     var inMatch = exp.match(forAliasRE);
     if (!inMatch) { return; }
     var res = {};
@@ -10472,12 +10547,14 @@
   function processIf(el) {
     var exp = getAndRemoveAttr(el, "v-if");
     if (exp) {
+      // 拿到v-if
       el.if = exp;
       addIfCondition(el, {
         exp: exp,
         block: el,
       });
     } else {
+      // 没拿到v-if 取v-else v-else-if
       if (getAndRemoveAttr(el, "v-else") != null) {
         el.else = true;
       }
@@ -12332,6 +12409,7 @@
   /*  */
 
   // check whether current browser encodes a char inside attribute values
+  // 检查当前浏览器是否在属性值中编码了一个字符
   var div;
   function getShouldDecode (href) {
     div = div || document.createElement('div');
@@ -12340,8 +12418,11 @@
   }
 
   // #3663: IE encodes newlines inside attribute values while other browsers don't
+  // IE 对属性值内的换行符进行编码，而其他浏览器则没有
   var shouldDecodeNewlines = inBrowser ? getShouldDecode(false) : false;
   // #6828: chrome encodes content in a[href]
+  // chrome 对 a[href] 中的内容进行编码
+  // eg:<a href="https://www.google.com/&#9;">My link 2</a>
   var shouldDecodeNewlinesForHref = inBrowser ? getShouldDecode(true) : false;
 
   /*  */

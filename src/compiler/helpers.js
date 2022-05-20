@@ -180,6 +180,8 @@ export function getBindingAttr (
 // doesn't get processed by processAttrs.
 // By default it does NOT remove it from the map (attrsMap) because the map is
 // needed during codegen.
+// 注意：这只会从 Array (attrsList) 中删除 attr，这样它就不会被 processAttrs 处理。
+// 默认情况下，它不会将其从地图 (attrsMap) 中删除，因为在 codegen 期间需要地图
 export function getAndRemoveAttr (
   el: ASTElement,
   name: string,

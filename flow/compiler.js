@@ -4,7 +4,7 @@ declare type CompilerOptions = {
   directives?: { [key: string]: Function }; // platform specific directives
   staticKeys?: string; // a list of AST properties to be considered static; for optimization
   isUnaryTag?: (tag: string) => ?boolean; // check if a tag is unary for the platform
-  canBeLeftOpenTag?: (tag: string) => ?boolean; // check if a tag can be left opened
+  canBeLeftOpenTag?: (tag: string) => ?boolean; // check if a tag can be left opened 检查标签是否可以保持打开状态
   isReservedTag?: (tag: string) => ?boolean; // check if a tag is a native for the platform
   preserveWhitespace?: boolean; // preserve whitespace between elements? (Deprecated)
   whitespace?: 'preserve' | 'condense'; // whitespace handling strategy

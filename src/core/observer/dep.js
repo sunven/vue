@@ -57,7 +57,7 @@ export default class Dep {
 // This is globally unique because only one watcher
 // can be evaluated at a time.
 // 当前正在评估的目标观察者。 这是全球唯一的，因为一次只能评估一个观察者。
-// targetStack：父组件中渲染子组件时，
+// targetStack：父组件中渲染子组件时，renderWatcher 和 computedWatcher时
 Dep.target = null;
 const targetStack = [];
 
