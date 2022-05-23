@@ -197,7 +197,8 @@ export function mountComponent(
     };
   }
 
-  // 我们将其设置为vm._watcher在watcher的构造函数中，因为watcher的初始补丁可能调用$forceUpdate（例如，在子组件的挂载钩子中），它依赖于已经定义的vm._watcher
+  // 我们将其设置为vm._watcher在watcher的构造函数中，
+  // 因为watcher的初始补丁可能调用$forceUpdate（例如，在子组件的挂载钩子中），它依赖于已经定义的vm._watcher
   new Watcher(
     vm,
     updateComponent,
@@ -205,6 +206,7 @@ export function mountComponent(
     {
       before() {
         if (vm._isMounted && !vm._isDestroyed) {
+          // watcher update之前调用 beforeUpdate
           callHook(vm, "beforeUpdate");
         }
       },

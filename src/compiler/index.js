@@ -18,6 +18,10 @@ export const createCompiler = createCompilerCreator(function baseCompile(
     // 优化：标记静态节点
     optimize(ast, options);
   }
+
+  JSON.stringify(ast, replacer)
+  // JSON.stringify(ast.children[0].ifConditions, replacer)
+
   //将ast转为render的字符串形式
   const code = generate(ast, options);
   return {
@@ -26,3 +30,11 @@ export const createCompiler = createCompilerCreator(function baseCompile(
     staticRenderFns: code.staticRenderFns,
   };
 });
+
+// 循环引用
+function replacer(key, value) {
+  if (key === "parent" || key === "ifConditions" || key === 'start' || key === 'end') {
+    return undefined;
+  }
+  return value;
+}

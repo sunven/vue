@@ -1949,6 +1949,7 @@
   function flushCallbacks() {
     pending = false;
     var copies = callbacks.slice(0);
+    // 清空callbacks
     callbacks.length = 0;
     // 遍历执行
     for (var i = 0; i < copies.length; i++) {
@@ -1971,13 +1972,16 @@
 
   // nextTick行为利用了可以访问的微任务队列
   // 通过本机Promise.then或MutationObserver。
-  // MutationObserver拥有更广泛的支持，但是在iOS>=9.3.3的UIWebView中，当触发touch事件处理程序时，它会受到严重的缺陷。它触发几次后就完全停止工作了。。。因此，如果本地Promise可用，我们将使用它：
+  // MutationObserver拥有更广泛的支持，但是在iOS>=9.3.3的UIWebView中，当触发touch事件处理程序时，
+  // 它会受到严重的缺陷。它触发几次后就完全停止工作了。。。因此，如果本地Promise可用，我们将使用它：
   /* istanbul ignore next, $flow-disable-line */
   if (typeof Promise !== "undefined" && isNative(Promise)) {
     var p = Promise.resolve();
     timerFunc = function () {
       p.then(flushCallbacks);
-      // 在有问题的UIWebViews中，Promise.then并没有完全中断，但它可能会陷入一种奇怪的状态，即回调被推送到微任务队列中，但队列没有被刷新，直到浏览器需要执行其他一些工作，例如处理计时器。因此，我们可以通过添加一个空计时器来“强制”刷新微任务队列。
+      // 在有问题的UIWebViews中，Promise.then并没有完全中断，但它可能会陷入一种奇怪的状态，
+      // 即回调被推送到微任务队列中，但队列没有被刷新，直到浏览器需要执行其他一些工作，例如处理计时器。
+      // 因此，我们可以通过添加一个空计时器来“强制”刷新微任务队列。
       if (isIOS) { setTimeout(noop); }
     };
     isUsingMicroTask = true;
@@ -4190,7 +4194,8 @@
       };
     }
 
-    // 我们将其设置为vm._watcher在watcher的构造函数中，因为watcher的初始补丁可能调用$forceUpdate（例如，在子组件的挂载钩子中），它依赖于已经定义的vm._watcher
+    // 我们将其设置为vm._watcher在watcher的构造函数中，
+    // 因为watcher的初始补丁可能调用$forceUpdate（例如，在子组件的挂载钩子中），它依赖于已经定义的vm._watcher
     new Watcher(
       vm,
       updateComponent,
@@ -4198,6 +4203,7 @@
       {
         before: function before() {
           if (vm._isMounted && !vm._isDestroyed) {
+            // watcher update之前调用 beforeUpdate
             callHook(vm, "beforeUpdate");
           }
         },
@@ -4368,6 +4374,7 @@
 
   /**
    * Reset the scheduler's state.
+   * 重置调度程序的状态。
    */
   function resetSchedulerState() {
     index = queue.length = activatedChildren.length = 0;
@@ -4383,9 +4390,13 @@
   // if the page has thousands of event listeners. Instead, we take a timestamp
   // every time the scheduler flushes and use that for all event listeners
   // attached during that flush.
+  // 异步边缘案例 #6566 需要在附加事件侦听器时保存时间戳。
+  // 但是，调用 performance.now() 会产生性能开销，尤其是在页面有数千个事件侦听器的情况下。
+  // 相反，我们在每次调度程序刷新时获取一个时间戳，并将其用于在该刷新期间附加的所有事件侦听器
   var currentFlushTimestamp = 0;
 
   // Async edge case fix requires storing an event listener's attach timestamp.
+  // 异步边缘情况修复需要存储事件侦听器的附加时间戳。
   var getNow = Date.now;
 
   // Determine what event timestamp the browser is using. Annoyingly, the
@@ -4394,6 +4405,9 @@
   // same timestamp type when saving the flush timestamp.
   // All IE versions use low-res event timestamps, and have problematic clock
   // implementations (#9632)
+  // 确定浏览器正在使用的事件时间戳。 令人讨厌的是，时间戳可以是高分辨率（相对于页面加载）或低分辨率（相对于 UNIX 纪元），
+  // 因此为了比较时间，我们必须在保存刷新时间戳时使用相同的时间戳类型。
+  // 所有 IE 版本都使用低分辨率事件时间戳，并且有问题的时钟实现 (#9632)
   if (inBrowser && !isIE) {
     var performance = window.performance;
     if (
@@ -4410,28 +4424,24 @@
   }
 
   /**
-   * Flush both queues and run the watchers.
+   * 遍历执行所有watcher
    */
   function flushSchedulerQueue() {
     currentFlushTimestamp = getNow();
     flushing = true;
     var watcher, id;
 
-    // Sort queue before flush.
-    // This ensures that:
-    // 1. Components are updated from parent to child. (because parent is always
-    //    created before the child)
-    // 2. A component's user watchers are run before its render watcher (because
-    //    user watchers are created before the render watcher)
-    // 3. If a component is destroyed during a parent component's watcher run,
-    //    its watchers can be skipped.
+    // 在刷新之前对队列进行排序。这可确保：
+    // 1. 组件从父级更新到子级。 （因为父母总是在孩子之前创建）
+    // 2. 组件的用户观察者在其渲染观察者之前运行（因为用户观察者在render watcher之前创建）
+    // 3. 如果一个组件在父组件的 watcher 运行期间被destroyed，可以跳过它的watcher
     queue.sort(function (a, b) { return a.id - b.id; });
 
-    // do not cache length because more watchers might be pushed
-    // as we run existing watchers
+    // 不要缓存长度，queue在不断变化
     for (index = 0; index < queue.length; index++) {
       watcher = queue[index];
       if (watcher.before) {
+        // 例如beforeUpdated hook
         watcher.before();
       }
       id = watcher.id;
@@ -4439,6 +4449,7 @@
       // 真的的操作是run方法
       watcher.run();
       // in dev build, check and stop circular updates.
+      // 在开发版本中，检查并停止循环更新。
       if (has[id] != null) {
         circular[id] = (circular[id] || 0) + 1;
         if (circular[id] > MAX_UPDATE_COUNT) {
@@ -4454,13 +4465,14 @@
       }
     }
 
-    // keep copies of post queues before resetting state
+    // 在重置状态之前保留发布队列的副本
     var activatedQueue = activatedChildren.slice();
     var updatedQueue = queue.slice();
 
+    // 重置调度状态
     resetSchedulerState();
 
-    // call component updated and activated hooks
+    // activated和updated hook
     callActivatedHooks(activatedQueue);
     callUpdatedHooks(updatedQueue);
 
@@ -4506,14 +4518,16 @@
    */
   function queueWatcher(watcher) {
     var id = watcher.id;
-    //不存在才入队
     if (has[id] == null) {
+      // 不存在才入队，判断是否第一次进入，即queue中已经有这个watcher了，就不用再进了
       has[id] = true;
       if (!flushing) {
+        // 如果队列还未执行，则直接附加到队列尾部
         queue.push(watcher);
       } else {
         // if already flushing, splice the watcher based on its id
         // if already past its id, it will be run next immediately.
+        // watch放到合适位置，e.g. queue: [1,3,5,7],4得放到3和5之间
         var i = queue.length - 1;
         while (i > index && queue[i].id > watcher.id) {
           i--;
@@ -4522,6 +4536,7 @@
       }
       // queue the flush
       if (!waiting) {
+        // 如果未排队，则开始排队，nextick将执行调度队列。
         waiting = true;
 
         if (!config.async) {
@@ -4673,8 +4688,10 @@
       // 计算属性
       this.dirty = true;
     } else if (this.sync) {
+      // watch 默认异步 sync为false
       this.run();
     } else {
+      // render watcher
       queueWatcher(this);
     }
   };
@@ -11132,20 +11149,27 @@
    * Goal of the optimizer: walk the generated template AST tree
    * and detect sub-trees that are purely static, i.e. parts of
    * the DOM that never needs to change.
+   * 优化器的目标：遍历生成的模板 AST 树并检测纯静态的子树，即永远不需要更改的 DOM 部分
    *
    * Once we detect these sub-trees, we can:
    *
    * 1. Hoist them into constants, so that we no longer need to
    *    create fresh nodes for them on each re-render;
    * 2. Completely skip them in the patching process.
+   *
+   * 一旦我们检测到这些子树，我们就可以：
+   * 1. 将它们提升为常量，这样我们就不再需要在每次重新渲染时为它们创建新的节点；
+   * 2. 在补丁过程中完全跳过它们。
    */
   function optimize (root, options) {
     if (!root) { return }
-    isStaticKey = genStaticKeysCached(options.staticKeys || '');
+    isStaticKey = genStaticKeysCached(options.staticKeys || '');  // options.staticKeys: staticClass,staticStyle
     isPlatformReservedTag = options.isReservedTag || no;
     // first pass: mark all non-static nodes.
+    // 第一遍：标记所有非静态节点。
     markStatic$1(root);
     // second pass: mark static roots.
+    // 第二遍：标记静态根。
     markStaticRoots(root, false);
   }
 
@@ -11159,12 +11183,18 @@
   function markStatic$1 (node) {
     node.static = isStatic(node);
     if (node.type === 1) {
+      // 普通元素额外处理
       // do not make component slot content static. this avoids
       // 1. components not able to mutate slot nodes
       // 2. static slot content fails for hot-reloading
+      // 不要将组件插槽内容设为静态。 这避免了
+      // 1. 组件不能改变槽节点
+      // 2. 静态槽内容热加载失败
       if (
-        !isPlatformReservedTag(node.tag) &&
-        node.tag !== 'slot' &&
+        !isPlatformReservedTag(node.tag) && // 不是保留标签（input，div)
+        node.tag !== 'slot' && // 不是slot
+        // 有inline-template属性
+        // https://cn.vuejs.org/v2/guide/components-edge-cases.html#%E5%86%85%E8%81%94%E6%A8%A1%E6%9D%BF
         node.attrsMap['inline-template'] == null
       ) {
         return
@@ -11173,10 +11203,13 @@
         var child = node.children[i];
         markStatic$1(child);
         if (!child.static) {
+          // 如果有子节点是非静态的，父节点也变为非静态的
           node.static = false;
         }
       }
       if (node.ifConditions) {
+        // elseif 和 else 节点在ifConditions中
+        // 如果有子节点是非静态的，父节点也变为非静态的
         for (var i$1 = 1, l$1 = node.ifConditions.length; i$1 < l$1; i$1++) {
           var block = node.ifConditions[i$1].block;
           markStatic$1(block);
@@ -11190,12 +11223,17 @@
 
   function markStaticRoots (node, isInFor) {
     if (node.type === 1) {
+      // 普通元素额外处理
       if (node.static || node.once) {
+        // 静态节点, v-once
         node.staticInFor = isInFor;
       }
       // For a node to qualify as a static root, it should have children that
       // are not just static text. Otherwise the cost of hoisting out will
       // outweigh the benefits and it's better off to just always render it fresh.
+      // 1、本身是一个静态节点
+      // 2、必须拥有 children，
+      // 3、并且 children 不能只是一个文本节点，
       if (node.static && node.children.length && !(
         node.children.length === 1 &&
         node.children[0].type === 3
@@ -11206,11 +11244,13 @@
         node.staticRoot = false;
       }
       if (node.children) {
+        // 遍历children
         for (var i = 0, l = node.children.length; i < l; i++) {
           markStaticRoots(node.children[i], isInFor || !!node.for);
         }
       }
       if (node.ifConditions) {
+        // 遍历ifConditions
         for (var i$1 = 1, l$1 = node.ifConditions.length; i$1 < l$1; i$1++) {
           markStaticRoots(node.ifConditions[i$1].block, isInFor);
         }
@@ -11220,18 +11260,20 @@
 
   function isStatic (node) {
     if (node.type === 2) { // expression
+      // 表达式
       return false
     }
     if (node.type === 3) { // text
+      // 文本
       return true
     }
-    return !!(node.pre || (
+    return !!(node.pre || ( // v-pre
       !node.hasBindings && // no dynamic bindings
-      !node.if && !node.for && // not v-if or v-for or v-else
-      !isBuiltInTag(node.tag) && // not a built-in
-      isPlatformReservedTag(node.tag) && // not a component
-      !isDirectChildOfTemplateFor(node) &&
-      Object.keys(node).every(isStaticKey)
+      !node.if && !node.for && // not v-if or v-for or v-else 没有v-if v-for
+      !isBuiltInTag(node.tag) && // not a built-in 不是内建标签（"slot,component"）
+      isPlatformReservedTag(node.tag) && // not a component 不是组件，即：保留标签（input，div)
+      !isDirectChildOfTemplateFor(node) && // 不是带有 v-for 的 template 标签的直接子节点
+      Object.keys(node).every(isStaticKey) // 节点的所有属性的 key 都满足静态 key
     ))
   }
 
@@ -11563,7 +11605,7 @@
     altGen,
     altEmpty
   ) {
-    el.ifProcessed = true; // avoid recursion
+    el.ifProcessed = true; // avoid recursion 避免递归
     return genIfConditions(el.ifConditions.slice(), state, altGen, altEmpty);
   }
 
@@ -12391,6 +12433,10 @@
       // 优化：标记静态节点
       optimize(ast, options);
     }
+
+    JSON.stringify(ast, replacer);
+    // JSON.stringify(ast.children[0].ifConditions, replacer)
+
     //将ast转为render的字符串形式
     var code = generate(ast, options);
     return {
@@ -12399,6 +12445,14 @@
       staticRenderFns: code.staticRenderFns,
     };
   });
+
+  // 循环引用
+  function replacer(key, value) {
+    if (key === "parent" || key === "ifConditions" || key === 'start' || key === 'end') {
+      return undefined;
+    }
+    return value;
+  }
 
   /*  */
 

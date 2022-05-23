@@ -158,7 +158,7 @@ export function genIf(
   altGen?: Function,
   altEmpty?: string
 ): string {
-  el.ifProcessed = true; // avoid recursion
+  el.ifProcessed = true; // avoid recursion 避免递归
   return genIfConditions(el.ifConditions.slice(), state, altGen, altEmpty);
 }
 

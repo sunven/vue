@@ -172,8 +172,10 @@ export default class Watcher {
       // 计算属性
       this.dirty = true;
     } else if (this.sync) {
+      // watch 默认异步 sync为false
       this.run();
     } else {
+      // render watcher
       queueWatcher(this);
     }
   }

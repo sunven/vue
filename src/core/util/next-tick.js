@@ -14,6 +14,7 @@ let pending = false;
 function flushCallbacks() {
   pending = false;
   const copies = callbacks.slice(0);
+  // 清空callbacks
   callbacks.length = 0;
   // 遍历执行
   for (let i = 0; i < copies.length; i++) {
@@ -36,13 +37,16 @@ let timerFunc;
 
 // nextTick行为利用了可以访问的微任务队列
 // 通过本机Promise.then或MutationObserver。
-// MutationObserver拥有更广泛的支持，但是在iOS>=9.3.3的UIWebView中，当触发touch事件处理程序时，它会受到严重的缺陷。它触发几次后就完全停止工作了。。。因此，如果本地Promise可用，我们将使用它：
+// MutationObserver拥有更广泛的支持，但是在iOS>=9.3.3的UIWebView中，当触发touch事件处理程序时，
+// 它会受到严重的缺陷。它触发几次后就完全停止工作了。。。因此，如果本地Promise可用，我们将使用它：
 /* istanbul ignore next, $flow-disable-line */
 if (typeof Promise !== "undefined" && isNative(Promise)) {
   const p = Promise.resolve();
   timerFunc = () => {
     p.then(flushCallbacks);
-    // 在有问题的UIWebViews中，Promise.then并没有完全中断，但它可能会陷入一种奇怪的状态，即回调被推送到微任务队列中，但队列没有被刷新，直到浏览器需要执行其他一些工作，例如处理计时器。因此，我们可以通过添加一个空计时器来“强制”刷新微任务队列。
+    // 在有问题的UIWebViews中，Promise.then并没有完全中断，但它可能会陷入一种奇怪的状态，
+    // 即回调被推送到微任务队列中，但队列没有被刷新，直到浏览器需要执行其他一些工作，例如处理计时器。
+    // 因此，我们可以通过添加一个空计时器来“强制”刷新微任务队列。
     if (isIOS) setTimeout(noop);
   };
   isUsingMicroTask = true;

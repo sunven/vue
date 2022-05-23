@@ -2,7 +2,7 @@ declare type CompilerOptions = {
   warn?: Function; // allow customizing warning in different environments; e.g. node
   modules?: Array<ModuleOptions>; // platform specific modules; e.g. style; class
   directives?: { [key: string]: Function }; // platform specific directives
-  staticKeys?: string; // a list of AST properties to be considered static; for optimization
+  staticKeys?: string; // a list of AST properties to be considered static; for optimization // 被视为静态的 AST 属性列表； 用于优化
   isUnaryTag?: (tag: string) => ?boolean; // check if a tag is unary for the platform
   canBeLeftOpenTag?: (tag: string) => ?boolean; // check if a tag can be left opened 检查标签是否可以保持打开状态
   isReservedTag?: (tag: string) => ?boolean; // check if a tag is a native for the platform
