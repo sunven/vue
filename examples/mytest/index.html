@@ -21,7 +21,11 @@
     <button @click="count++">change count</button>
   </div>
   <script>
-    Vue.component('A1', { template: '<div>A1:{{count}}</div>', props: ['count'] })
+    Vue.component('B1', {
+      // render: function (h) { return h('div', null, 'aaa') },
+      template: '<div>aaa</div>'
+    })
+    Vue.component('A1', { template: '<div>A1:{{count}}<B1 /><B1 /></div>', props: ['count'] })
     let vm = new Vue({
       comments: true,
       //el: "#app",

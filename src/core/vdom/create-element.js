@@ -37,6 +37,7 @@ export function createElement(
     data = undefined;
   }
   if (isTrue(alwaysNormalize)) {
+    // 用户编写render alwaysNormalize为true
     normalizationType = ALWAYS_NORMALIZE;
   }
   return _createElement(context, tag, data, children, normalizationType);
@@ -89,9 +90,14 @@ export function _createElement(
     data.scopedSlots = { default: children[0] };
     children.length = 0;
   }
+  // 把children 规范成vnode类型
   if (normalizationType === ALWAYS_NORMALIZE) {
+    // 1、手写render
+    // 2、<template>, <slot>, v-for
     children = normalizeChildren(children);
   } else if (normalizationType === SIMPLE_NORMALIZE) {
+    // 1、编辑器生成的render
+    // 2、函数时组件：functional: true
     children = simpleNormalizeChildren(children);
   }
 
