@@ -52,6 +52,7 @@ export function _createElement(
   normalizationType?: number
 ): VNode | Array<VNode> {
   if (isDef(data) && isDef((data: any).__ob__)) {
+    // data不能是被观察的data
     process.env.NODE_ENV !== "production" &&
       warn(
         `Avoid using observed data object as vnode data: ${JSON.stringify(
@@ -98,6 +99,11 @@ export function _createElement(
   } else if (normalizationType === SIMPLE_NORMALIZE) {
     // 1、编辑器生成的render
     // 2、函数时组件：functional: true
+    // e.g.
+    // Vue.component('B1', {
+    //   render: function (h) { return [h('div', null, ['a'])] },
+    //   functional: true,
+    // })
     children = simpleNormalizeChildren(children);
   }
 

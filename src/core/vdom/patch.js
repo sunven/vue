@@ -209,6 +209,7 @@ export function createPatchFunction(backend) {
       // 缓存情况 keepAlive
       const isReactivated = isDef(vnode.componentInstance) && i.keepAlive;
       // init存在就执行
+      // 创建组件的VNode时，installComponentHooks
       // 这里的init是组件上的hook 会执行构造函数，得到组件实例
       if (isDef((i = i.hook)) && isDef((i = i.init))) {
         i(vnode, false /* hydrating */);

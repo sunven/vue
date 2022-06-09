@@ -61,6 +61,8 @@ export function lifecycleMixin(Vue: Class<Component>) {
     const prevEl = vm.$el;
     const prevVnode = vm._vnode;
     const restoreActiveInstance = setActiveInstance(vm);
+    // 这个 vnode 是通过 vm._render() 返回的组件渲染 VNode
+    // vm._vnode 和 vm.$vnode 的关系就是一种父子关系
     vm._vnode = vnode;
     // Vue.prototype.__patch__ 已经在入口处注入 src/platforms/web/runtime/index.js
     // based on the rendering backend used.

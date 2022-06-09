@@ -31,9 +31,9 @@ export function initMixin(Vue: Class<Component>) {
     vm._isVue = true;
     // 合并选项
     if (options && options._isComponent) {
-      // optimize internal component instantiation
-      // since dynamic options merging is pretty slow, and none of the
-      // internal component options needs special treatment.
+      // 组件初始化时进来 _isComponent 为 true
+      // 函数式组件不会进
+      // 优化内部组件实例化，因为动态选项合并非常慢，并且没有任何内部组件选项需要特殊处理
       initInternalComponent(vm, options);
     } else {
       vm.$options = mergeOptions(
@@ -72,6 +72,7 @@ export function initMixin(Vue: Class<Component>) {
     }
 
     if (vm.$options.el) {
+      // 组件初始化不会进
       vm.$mount(vm.$options.el);
     }
   };
@@ -82,7 +83,8 @@ export function initInternalComponent(
   options: InternalComponentOptions
 ) {
   const opts = (vm.$options = Object.create(vm.constructor.options));
-  // doing this because it's faster than dynamic enumeration.
+  // 这样做是因为它比动态枚举更快。
+  // 把创建组件时option 挂到 $options上
   const parentVnode = options._parentVnode;
   opts.parent = options.parent;
   opts._parentVnode = parentVnode;

@@ -21,9 +21,9 @@ import {
   deactivateChildComponent,
 } from "../instance/lifecycle";
 
-// inline hooks to be invoked on component VNodes during patch
+// patch期间要在组件 VNode 上调用的inline hook
 const componentVNodeHooks = {
-  // 实例化和挂在
+  // 实例化和挂载
   init(vnode: VNodeWithData, hydrating: boolean): ?boolean {
     if (
       vnode.componentInstance &&
@@ -40,7 +40,7 @@ const componentVNodeHooks = {
         vnode,
         activeInstance
       ));
-      // 挂载
+      // 组件自己挂载，不会在Vue的_init中挂载
       child.$mount(hydrating ? vnode.elm : undefined, hydrating);
     }
   },
@@ -103,9 +103,12 @@ export function createComponent(
     return;
   }
 
+  // _base就是Vue
+  // src/core/global-api/index.js 中定义
+  // Vue.options._base = Vue;
   const baseCtor = context.$options._base;
 
-  // plain options object: turn it into a constructor
+  // 普通选项对象：将其变成构造函数
   if (isObject(Ctor)) {
     Ctor = baseCtor.extend(Ctor);
   }
@@ -181,6 +184,7 @@ export function createComponent(
 
   // return a placeholder vnode
   const name = Ctor.options.name || tag;
+  // 组件的VNode没有children
   const vnode = new VNode(
     `vue-component-${Ctor.cid}${name ? `-${name}` : ""}`,
     data,
@@ -212,6 +216,7 @@ export function createComponentInstanceForVnode(
     options.render = inlineTemplate.render;
     options.staticRenderFns = inlineTemplate.staticRenderFns;
   }
+  // 会调用Vue上的_init方法
   return new vnode.componentOptions.Ctor(options);
 }
 

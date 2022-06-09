@@ -11,21 +11,15 @@
 
 <body>
   <div id="app">
-    <p v-if="count === 1">1:{{ count }}</p>
-    <span v-else-if="count === 2">2:{{ count }}</span>
-    <div v-else>other:{{ count }}</div>
-    <ul>
-      <li v-for="(item, index) in count">{{ index }}:{{ item }}</li>
-    </ul>
     <A1 :count="count"></A1>
-    <button @click="count++">change count</button>
+    <B1></B1>
   </div>
   <script>
     Vue.component('B1', {
-      // render: function (h) { return h('div', null, 'aaa') },
-      template: '<div>aaa</div>'
+      render: function (h) { return [h('div', null, ['a'])] },
+      functional: true,
     })
-    Vue.component('A1', { template: '<div>A1:{{count}}<B1 /><B1 /></div>', props: ['count'] })
+    Vue.component('A1', { template: '<div>A1:{{count}}</div>', props: ['count'] })
     let vm = new Vue({
       comments: true,
       //el: "#app",
