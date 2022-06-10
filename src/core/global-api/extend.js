@@ -36,6 +36,7 @@ export function initExtend (Vue: GlobalAPI) {
     Sub.prototype = Object.create(Super.prototype)
     Sub.prototype.constructor = Sub
     Sub.cid = cid++
+    // Vue.options 和组件的 option 合并
     Sub.options = mergeOptions(
       Super.options,
       extendOptions
@@ -67,9 +68,7 @@ export function initExtend (Vue: GlobalAPI) {
       Sub.options.components[name] = Sub
     }
 
-    // keep a reference to the super options at extension time.
-    // later at instantiation we can check if Super's options have
-    // been updated.
+    // 在扩展时保留对父级选项的引用。 稍后在实例化时，我们可以检查 Super 的选项是否已更新
     Sub.superOptions = Super.options
     Sub.extendOptions = extendOptions
     Sub.sealedOptions = extend({}, Sub.options)

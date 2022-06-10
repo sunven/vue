@@ -15,11 +15,26 @@
     <B1></B1>
   </div>
   <script>
+    Vue.mixin({
+      created() {
+        console.log('parent created')
+      }
+    })
+    // Vue.extend()
     Vue.component('B1', {
       render: function (h) { return [h('div', null, ['a'])] },
-      functional: true,
+      // functional: true,
+      created() {
+        console.log('B1 created')
+      }
     })
-    Vue.component('A1', { template: '<div>A1:{{count}}</div>', props: ['count'] })
+    Vue.component('A1', {
+      template: '<div>A1:{{count}}<B1 /></div>',
+      props: ['count'],
+      created() {
+        console.log('A1 created')
+      },
+    })
     let vm = new Vue({
       comments: true,
       //el: "#app",

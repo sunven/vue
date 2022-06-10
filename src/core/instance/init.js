@@ -37,7 +37,7 @@ export function initMixin(Vue: Class<Component>) {
       initInternalComponent(vm, options);
     } else {
       vm.$options = mergeOptions(
-        resolveConstructorOptions(vm.constructor),
+        resolveConstructorOptions(vm.constructor), // Vue.options
         options || {},
         vm
       );
@@ -82,6 +82,8 @@ export function initInternalComponent(
   vm: Component,
   options: InternalComponentOptions
 ) {
+  // vm.constructor.options 就是 Sub.options
+  // 是合并了Vue.options 和组件的 options 之后的
   const opts = (vm.$options = Object.create(vm.constructor.options));
   // 这样做是因为它比动态枚举更快。
   // 把创建组件时option 挂到 $options上

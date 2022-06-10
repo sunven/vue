@@ -1202,9 +1202,8 @@
   /*  */
 
   /**
-   * Option overwriting strategies are functions that handle
-   * how to merge a parent option value and a child option
-   * value into the final value.
+   * 选项覆盖策略是处理如何将父选项值和子选项值合并为最终值的函数
+   * {}
    */
   var strats = config.optionMergeStrategies;
 
@@ -1322,11 +1321,16 @@
 
   /**
    * Hooks and props are merged as arrays.
+   * e.g. mixin进去的created
    */
   function mergeHook (
     parentVal,
     childVal
   ) {
+    // child不存在 返回parent
+    // parent存在 合并parent 和 child 变为一个数组
+    // parent不存在 返回child数组
+    // parent 和 child 都定义了相同的钩子函数，合并成一个数组,parent前 child后
     var res = childVal
       ? parentVal
         ? parentVal.concat(childVal)
@@ -1339,6 +1343,11 @@
       : res
   }
 
+  /**
+   * 去重
+   * @param {*} hooks
+   * @returns
+   */
   function dedupeHooks (hooks) {
     var res = [];
     for (var i = 0; i < hooks.length; i++) {
@@ -1356,9 +1365,7 @@
   /**
    * Assets
    *
-   * When a vm is present (instance creation), we need to do
-   * a three-way merge between constructor options, instance
-   * options and parent options.
+   * 当 vm 存在时（创建实例），我们需要在【构造函数选项】、【实例选项】和【父选项】之间进行三向合并
    */
   function mergeAssets (
     parentVal,
@@ -1368,13 +1375,18 @@
   ) {
     var res = Object.create(parentVal || null);
     if (childVal) {
+      // childVal 要是个object
       assertObjectType(key, childVal, vm);
+      // childVal 属性 赋值到res上
       return extend(res, childVal)
     } else {
       return res
     }
   }
 
+  // components
+  // directives
+  // filters
   ASSET_TYPES.forEach(function (type) {
     strats[type + 's'] = mergeAssets;
   });
@@ -1565,8 +1577,8 @@
    * 将两个选项对象合并为一个新的选项对象。 用于实例化和继承的核心实用程序。
    */
   function mergeOptions (
-    parent,
-    child,
+    parent, //e.g. Vue.options
+    child, // e.g. new Vue 的 options
     vm
   ) {
     {
@@ -1581,10 +1593,9 @@
     normalizeInject(child, vm);
     normalizeDirectives(child);
 
-    // Apply extends and mixins on the child options,
-    // but only if it is a raw options object that isn't
-    // the result of another mergeOptions call.
-    // Only merged options has the _base property.
+    // 在子选项上应用扩展和混合，但前提是它是一个原始选项对象，
+    // 不是另一个 mergeOptions 调用的结果。 只有合并的选项具有 _base 属性
+    // 递归把extends,mixins合并到parent上
     if (!child._base) {
       if (child.extends) {
         parent = mergeOptions(parent, child.extends, vm);
@@ -1603,6 +1614,7 @@
     }
     for (key in child) {
       if (!hasOwn(parent, key)) {
+        // 在child上，不在parent自身上
         mergeField(key);
       }
     }
@@ -5189,7 +5201,7 @@
         initInternalComponent(vm, options);
       } else {
         vm.$options = mergeOptions(
-          resolveConstructorOptions(vm.constructor),
+          resolveConstructorOptions(vm.constructor), // Vue.options
           options || {},
           vm
         );
@@ -5231,6 +5243,8 @@
     vm,
     options
   ) {
+    // vm.constructor.options 就是 Sub.options
+    // 是合并了Vue.options 和组件的 options 之后的
     var opts = (vm.$options = Object.create(vm.constructor.options));
     // 这样做是因为它比动态枚举更快。
     // 把创建组件时option 挂到 $options上
@@ -5372,6 +5386,7 @@
       Sub.prototype = Object.create(Super.prototype);
       Sub.prototype.constructor = Sub;
       Sub.cid = cid++;
+      // Vue.options 和组件的 option 合并
       Sub.options = mergeOptions(
         Super.options,
         extendOptions
@@ -5403,9 +5418,7 @@
         Sub.options.components[name] = Sub;
       }
 
-      // keep a reference to the super options at extension time.
-      // later at instantiation we can check if Super's options have
-      // been updated.
+      // 在扩展时保留对父级选项的引用。 稍后在实例化时，我们可以检查 Super 的选项是否已更新
       Sub.superOptions = Super.options;
       Sub.extendOptions = extendOptions;
       Sub.sealedOptions = extend({}, Sub.options);
@@ -5675,6 +5688,7 @@
     // components with in Weex's multi-instance scenarios.
     Vue.options._base = Vue;
 
+    // keep-alive组件
     extend(Vue.options.components, builtInComponents);
 
     initUse(Vue);
