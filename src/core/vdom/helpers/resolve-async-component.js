@@ -40,6 +40,28 @@ export function createAsyncPlaceholder (
   return node
 }
 
+// 1、高级异步组件
+// const AsyncComp = () => ({
+//   // 需要加载的组件。应当是一个 Promise
+//   component: import('./MyComp.vue'),
+//   // 加载中应当渲染的组件
+//   loading: LoadingComp,
+//   // 出错时渲染的组件
+//   error: ErrorComp,
+//   // 渲染加载中组件前的等待时间。默认：200ms。
+//   delay: 200,
+//   // 最长等待时间。超出此时间则渲染错误组件。默认：Infinity
+//   timeout: 3000
+// })
+// Vue.component('async-example', AsyncComp)
+
+// 2、Promise 形式
+// Vue.component(
+//   'async-webpack-example',
+//   // 该 `import` 函数返回一个 `Promise` 对象。
+//   () => import('./my-async-component')
+// )
+
 export function resolveAsyncComponent (
   factory: Function,
   baseCtor: Class<Component>

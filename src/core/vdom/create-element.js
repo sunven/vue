@@ -136,7 +136,8 @@ export function _createElement(
         context
       );
     } else if (
-      //组件标签
+      // 组件标签
+      // Vue.component 注册的
       (!data || !data.pre) &&
       isDef((Ctor = resolveAsset(context.$options, "components", tag)))
     ) {

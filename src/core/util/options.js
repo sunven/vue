@@ -449,6 +449,7 @@ export function mergeOptions (
  * Resolve an asset.
  * This function is used because child instances need access
  * to assets defined in its ancestor chain.
+ * 使用此函数是因为子实例需要访问其祖先链中定义的资产
  */
 export function resolveAsset (
   options: Object,
@@ -463,8 +464,10 @@ export function resolveAsset (
   const assets = options[type]
   // check local registration variations first
   if (hasOwn(assets, id)) return assets[id]
+  // 驼峰化
   const camelizedId = camelize(id)
   if (hasOwn(assets, camelizedId)) return assets[camelizedId]
+  // 首字母再变成大写
   const PascalCaseId = capitalize(camelizedId)
   if (hasOwn(assets, PascalCaseId)) return assets[PascalCaseId]
   // fallback to prototype chain

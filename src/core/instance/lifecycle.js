@@ -217,9 +217,11 @@ export function mountComponent(
   );
   hydrating = false;
 
-  // manually mounted instance, call mounted on self
-  // mounted is called for render-created child components in its inserted hook
+  // 手动挂载实例，调用自身挂载
+  // 为在其插入的钩子中渲染创建的子组件调用mounted
   if (vm.$vnode == null) {
+    // $vnode 为 null 表示不是组件的初始化，是外部的 new Vue
+    // 组件的初始化后的mounted在patch后
     vm._isMounted = true;
     callHook(vm, "mounted");
   }

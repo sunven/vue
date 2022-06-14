@@ -715,9 +715,9 @@ export function createPatchFunction(backend) {
     }
   }
 
+  // 执行钩子（mounted)
   function invokeInsertHook(vnode, queue, initial) {
-    // delay insert hooks for component root nodes, invoke them after the
-    // element is really inserted
+    // 组件根节点的延迟插入钩子，在元素真正插入后调用它们
     if (isTrue(initial) && isDef(vnode.parent)) {
       vnode.parent.data.pendingInsert = queue;
     } else {

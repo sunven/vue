@@ -61,6 +61,8 @@ const componentVNodeHooks = {
     const { context, componentInstance } = vnode;
     if (!componentInstance._isMounted) {
       componentInstance._isMounted = true;
+      // 组件的mounted 在此处执行
+      // 先子后父
       callHook(componentInstance, "mounted");
     }
     if (vnode.data.keepAlive) {
@@ -113,7 +115,7 @@ export function createComponent(
     Ctor = baseCtor.extend(Ctor);
   }
 
-  // if at this stage it's not a constructor or an async component factory,
+  // 如果在这个阶段它不是构造函数或异步组件工厂，
   // reject.
   if (typeof Ctor !== "function") {
     if (process.env.NODE_ENV !== "production") {
@@ -128,9 +130,8 @@ export function createComponent(
     asyncFactory = Ctor;
     Ctor = resolveAsyncComponent(asyncFactory, baseCtor);
     if (Ctor === undefined) {
-      // return a placeholder node for async component, which is rendered
-      // as a comment node but preserves all the raw information for the node.
-      // the information will be used for async server-rendering and hydration.
+      // 返回异步组件的占位符节点，该节点呈现为注释节点，但保留该节点的所有原始信息。
+      // 该信息将用于异步服务器渲染和水合
       return createAsyncPlaceholder(asyncFactory, data, context, children, tag);
     }
   }
