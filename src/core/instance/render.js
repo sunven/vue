@@ -117,6 +117,7 @@ export function renderMixin(Vue: Class<Component>) {
       // separately from one another. Nested component's render fns are called
       // when parent component is patched.
       // 无需维护堆栈，因为所有渲染 fns 都是彼此分开调用的。 修补父组件时调用嵌套组件的渲染 fns
+      // 异步组件渲染需要用
       currentRenderingInstance = vm;
       // $createElement就是h
       // 调用render得到vnode render的执行，也会触发 data/props的getter 收集依赖

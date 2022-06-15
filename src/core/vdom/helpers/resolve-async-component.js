@@ -84,10 +84,12 @@ export function resolveAsyncComponent (
   baseCtor: Class<Component>
 ): Class<Component> | void {
   if (isTrue(factory.error) && isDef(factory.errorComp)) {
+    // 组件加载失败
     return factory.errorComp
   }
 
   if (isDef(factory.resolved)) {
+    // 组件加载成功
     return factory.resolved
   }
 
@@ -98,6 +100,7 @@ export function resolveAsyncComponent (
   }
 
   if (isTrue(factory.loading) && isDef(factory.loadingComp)) {
+    // 组件加载中
     return factory.loadingComp
   }
 
@@ -154,6 +157,7 @@ export function resolveAsyncComponent (
     })
 
     // res可能是个undefined
+    // 高级异步组件返回对象  {component: ,loading: ,}
     const res = factory(resolve, reject)
 
     if (isObject(res)) {
@@ -163,6 +167,7 @@ export function resolveAsyncComponent (
           res.then(resolve, reject)
         }
       } else if (isPromise(res.component)) {
+        // 高级异步组件形式到这里
         res.component.then(resolve, reject)
 
         if (isDef(res.error)) {
@@ -175,6 +180,7 @@ export function resolveAsyncComponent (
             factory.loading = true
           } else {
             timerLoading = setTimeout(() => {
+              // 延迟执行
               timerLoading = null
               if (isUndef(factory.resolved) && isUndef(factory.error)) {
                 factory.loading = true
@@ -186,6 +192,7 @@ export function resolveAsyncComponent (
 
         if (isDef(res.timeout)) {
           timerTimeout = setTimeout(() => {
+            // 超出这个时间组件还没加载成功 则报错
             timerTimeout = null
             if (isUndef(factory.resolved)) {
               reject(
@@ -201,8 +208,10 @@ export function resolveAsyncComponent (
 
     sync = false
     // return in case resolved synchronously
+    // 第一次执行 resolveAsyncComponent，除非使用高级异步组件 0 delay 去创建了一个 loading 组件，
+    // 否则返回是 undefiend
     return factory.loading
-      ? factory.loadingComp
+      ? factory.loadingComp // 有loading组件就返回loading组件 delay为0就直接渲染loading 组件
       : factory.resolved
   }
 }
