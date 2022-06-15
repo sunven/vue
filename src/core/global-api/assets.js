@@ -34,6 +34,7 @@ export function initAssetRegisters(Vue: GlobalAPI) {
         }
         // 放到components中
         // vue全局注册，只是在根vue实例的components存放组件
+        // 异步组件直接到这里
         this.options[type + "s"][id] = definition;
         return definition;
       }

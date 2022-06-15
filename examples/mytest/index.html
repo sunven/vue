@@ -13,6 +13,7 @@
   <div id="app">
     <A1 :count="count"></A1>
     <B1></B1>
+    <async-example></async-example>
   </div>
   <script>
     Vue.mixin({
@@ -34,6 +35,14 @@
       created() {
         console.log('A1 created')
       },
+    })
+    Vue.component('async-example', function (resolve, reject) {
+      setTimeout(function () {
+        // 向 `resolve` 回调传递组件定义
+        resolve({
+          template: '<div>I am async!</div>'
+        })
+      }, 1000)
     })
     let vm = new Vue({
       comments: true,

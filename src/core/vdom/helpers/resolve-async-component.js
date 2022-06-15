@@ -62,8 +62,25 @@ export function createAsyncPlaceholder (
 //   () => import('./my-async-component')
 // )
 
+// 3.
+// Vue.component('async-example', function (resolve, reject) {
+//   // 这个特殊的 require 语法告诉 webpack
+//   // 自动将编译后的代码分割成不同的块，
+//   // 这些块将通过 Ajax 请求自动下载。
+//   require(['./my-async-component'], resolve)
+// })
+
+// Vue.component('async-example', function (resolve, reject) {
+//   setTimeout(function () {
+//     // 向 `resolve` 回调传递组件定义
+//     resolve({
+//       template: '<div>I am async!</div>'
+//     })
+//   }, 1000)
+// })
+
 export function resolveAsyncComponent (
-  factory: Function,
+  factory: Function, // factory就是注册异步组件时的函数
   baseCtor: Class<Component>
 ): Class<Component> | void {
   if (isTrue(factory.error) && isDef(factory.errorComp)) {
@@ -110,10 +127,12 @@ export function resolveAsyncComponent (
       }
     }
 
+    // 定义resolve 只执行一次
     const resolve = once((res: Object | Class<Component>) => {
       // cache resolved
+      // res如果时对象，再 Vue.extend 就变成了组件的构造函数
       factory.resolved = ensureCtor(res, baseCtor)
-      // invoke callbacks only if this is not a synchronous resolve
+      // 仅当这不是同步解析时才调用回调
       // (async resolves are shimmed as synchronous during SSR)
       if (!sync) {
         forceRender(true)
@@ -122,6 +141,7 @@ export function resolveAsyncComponent (
       }
     })
 
+    // reject 只执行一次
     const reject = once(reason => {
       process.env.NODE_ENV !== 'production' && warn(
         `Failed to resolve async component: ${String(factory)}` +
@@ -133,11 +153,12 @@ export function resolveAsyncComponent (
       }
     })
 
+    // res可能是个undefined
     const res = factory(resolve, reject)
 
     if (isObject(res)) {
       if (isPromise(res)) {
-        // () => Promise
+        // () => Promise Promise 形式的异步组件
         if (isUndef(factory.resolved)) {
           res.then(resolve, reject)
         }
