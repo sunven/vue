@@ -794,7 +794,7 @@ function processAttrs(el) {
     if (dirRE.test(name)) {
       // mark element as dynamic
       el.hasBindings = true;
-      // modifiers
+      // modifiers 修饰符  .sync
       modifiers = parseModifiers(name.replace(dirRE, ""));
       // support .foo shorthand syntax for the .prop modifier
       if (process.env.VBIND_PROP_SHORTHAND && propBindRE.test(name)) {
@@ -874,8 +874,9 @@ function processAttrs(el) {
           addAttr(el, name, value, list[i], isDynamic);
         }
       } else if (onRE.test(name)) {
-        // v-on
+        // v-on @ 事件
         name = name.replace(onRE, "");
+        // 动态事件
         isDynamic = dynamicArgRE.test(name);
         if (isDynamic) {
           name = name.slice(1, -1);

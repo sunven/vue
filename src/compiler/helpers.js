@@ -90,9 +90,8 @@ export function addHandler (
     )
   }
 
-  // normalize click.right and click.middle since they don't actually fire
-  // this is technically browser-specific, but at least for now browsers are
-  // the only target envs that have right/middle clicks.
+  // 规范化 click.right 和 click.middle 因为它们实际上并没有触发这在技术上是特定于浏览器的，
+  // 但至少目前浏览器是唯一具有右键/中间点击的目标环境
   if (modifiers.right) {
     if (dynamic) {
       name = `(${name})==='click'?'contextmenu':(${name})`
@@ -110,24 +109,33 @@ export function addHandler (
 
   // check capture modifier
   if (modifiers.capture) {
+    // 事件在捕获阶段执行
     delete modifiers.capture
     name = prependModifierMarker('!', name, dynamic)
   }
   if (modifiers.once) {
+    // 触发一次
     delete modifiers.once
     name = prependModifierMarker('~', name, dynamic)
   }
   /* istanbul ignore if */
   if (modifiers.passive) {
+    // 不会调用preventDefault函数来阻止默认行为
+    // <!-- 滚动事件的默认行为 (即滚动行为) 将会立即触发 -->
+    // <!-- 而不会等待 `onScroll` 完成  -->
+    // <!-- 这其中包含 `event.preventDefault()` 的情况 -->
+    // <div v-on:scroll.passive="onScroll">...</div>
     delete modifiers.passive
     name = prependModifierMarker('&', name, dynamic)
   }
 
   let events
   if (modifiers.native) {
+    // 原生事件
     delete modifiers.native
     events = el.nativeEvents || (el.nativeEvents = {})
   } else {
+    // 普通事件
     events = el.events || (el.events = {})
   }
 

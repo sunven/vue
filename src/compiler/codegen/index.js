@@ -272,10 +272,13 @@ export function genData(el: ASTElement, state: CodegenState): string {
     data += `domProps:${genProps(el.props)},`;
   }
   // event handlers
+  // parse时 解析
   if (el.events) {
+    // 普通事件
     data += `${genHandlers(el.events, false)},`;
   }
   if (el.nativeEvents) {
+    // 原生事件
     data += `${genHandlers(el.nativeEvents, true)},`;
   }
   // slot target
